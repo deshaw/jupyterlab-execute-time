@@ -1,0 +1,74 @@
+{
+  "name": "jupyterlab-execute-time",
+  "version": "1.0.0",
+  "description": "Display cell timings in Jupyter Lab",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension",
+    "execute time"
+  ],
+  "homepage": "https://github.com/deshaw/jupyterlab-execute-time",
+  "bugs": {
+    "url": "https://github.com/deshaw/jupyterlab-execute-time/issues"
+  },
+  "license": "BSD-3-Clause",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "schema/*.json"
+  ],
+  "sideEffects": [
+    "style/*.css"
+  ],
+  "jupyterlab": {
+    "extension": true,
+    "schemaDir": "schema"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/executeTime.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deshaw/jupyterlab-execute-time.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prettier": "prettier --write '**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}'",
+    "tslint": "tslint --fix -c tslint.json --project tsconfig.json '**/*{.ts,.tsx}'",
+    "lint": "npm run prettier && npm run tslint",
+    "clean": "rimraf lib tsconfig.tsbuildinfo",
+    "prepare": "npm run clean && npm run build",
+    "watch": "tsc -w",
+    "test": "ts-mocha -p tsconfig.json tests/**/*_spec.ts"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^2.0.2",
+    "@jupyterlab/cells": "^2.0.2",
+    "@jupyterlab/docregistry": "^2.0.2",
+    "@jupyterlab/notebook": "^2.0.2",
+    "@jupyterlab/settingregistry": "^2.0.1",
+    "@lumino/coreutils": "^1.4.2",
+    "@lumino/widgets": "^1.11.1",
+    "date-fns": "^2.11.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint && npm run test"
+    }
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^7.0.2",
+    "chai": "^4.2.0",
+    "husky": "^4.2.3",
+    "mocha": "^7.1.1",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.2",
+    "ts-mocha": "^7.0.0",
+    "tslint": "^6.1.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.2.0",
+    "typescript": "~3.8.3"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Execute Time",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "description": "Enable ExecuteTime cell extension",
+      "default": true
+    },
+    "highlight": {
+      "type": "boolean",
+      "title": "Highlight",
+      "description": "Highlight the execution time on completion",
+      "default": true
+    }
+  }
+}
