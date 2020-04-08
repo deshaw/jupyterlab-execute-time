@@ -11,7 +11,7 @@ Note: for this to show anything, you need to enable cell timing in the notebook 
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part."
 ## Requirements
 
-- JupyterLab >= 2.0
+- JupyterLab >= 2.0.2
 
 ## Install
 
