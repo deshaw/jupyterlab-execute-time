@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -x
+
+node -v
+jupyter lab --version
+
+jlpm
+jlpm run build
+
+jupyter labextension install . --no-build
+jupyter lab build
+mkdir -p  ~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
+echo '{"recordTiming": true}' > ~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings
