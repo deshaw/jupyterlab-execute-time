@@ -1,4 +1,6 @@
 # jupyterlab-execute-time
+[![NPM version][npm-image]][npm-url] [![NPM DM][npm-dm-image]][npm-url] [![Build Status][travis-image]][travis-url]
+
 
 Display cell timings.
 
@@ -73,3 +75,11 @@ This plugin was contributed back to the community by the [D. E. Shaw group](http
 This project is released under a [BSD-3-Clause license](https://github.com/deshaw/jupyterlab-execute-time/blob/master/LICENSE.txt).
 
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part.
+
+[npm-url]: https://npmjs.org/package/jupyterlab-execute-time
+[npm-image]: https://badge.fury.io/js/jupyterlab-execute-time.png
+[npm-dm-image]: https://img.shields.io/npm/dm/jupyterlab-execute-time.svg
+
+[travis-url]: http://travis-ci.org/deshaw/jupyterlab-execute-time
+[travis-image]: https://secure.travis-ci.org/deshaw/jupyterlab-execute-time.png?branch=master
+
