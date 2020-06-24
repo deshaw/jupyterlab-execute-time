@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020 D. E. Shaw & Co., L.P.
+# All rights reserved.
+# 
+# This project is released under a BSD-3-Clause license.
+#
+
+set -o errexit
+set -o xtrace
+
+node -v
+jupyter lab --version
+
+# Install the latest version, building from source currently has issues
+jupyter labextension install jupyterlab-execute-time --debug --minimize=False
+
+mkdir -p  ~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
+echo '{"recordTiming": true}' > ~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings

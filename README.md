@@ -1,6 +1,7 @@
 # jupyterlab-execute-time
-[![NPM version][npm-image]][npm-url] [![NPM DM][npm-dm-image]][npm-url] [![Build Status][travis-image]][travis-url]
 
+[![Binder][badge-binder]][binder]
+[![NPM version][npm-image]][npm-url] [![NPM DM][npm-dm-image]][npm-url] [![Build Status][travis-image]][travis-url]
 
 Display cell timings.
 
@@ -11,6 +12,7 @@ This is inspired by the notebook version [here](https://github.com/ipython-contr
 Note: for this to show anything, you need to enable cell timing in the notebook via Settings->Advanced Settings Editor->Notebook: `{"recordTiming": true}`
 
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part."
+
 ## Requirements
 
 - JupyterLab >= 2.0.2
@@ -51,7 +53,7 @@ jupyter lab --watch
 
 To test:
 
-```
+```bash
 yarn run test
 ```
 
@@ -72,6 +74,7 @@ This plugin was contributed back to the community by the [D. E. Shaw group](http
 </p>
 
 ## License
+
 This project is released under a [BSD-3-Clause license](https://github.com/deshaw/jupyterlab-execute-time/blob/master/LICENSE.txt).
 
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part.
@@ -83,3 +86,5 @@ This project is released under a [BSD-3-Clause license](https://github.com/desha
 [travis-url]: http://travis-ci.org/deshaw/jupyterlab-execute-time
 [travis-image]: https://secure.travis-ci.org/deshaw/jupyterlab-execute-time.png?branch=master
 
+[badge-binder]: https://mybinder.org/badge_logo.svg
+[binder]: https://mybinder.org/v2/gh/deshaw/jupyterlab-execute-time/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb
