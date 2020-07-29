@@ -5,7 +5,7 @@
 
 Display cell timings.
 
-![Execute Time Screenshot](./docs/execute-time-screenshot.png)
+![Execute Time Screenshot](https://github.com/deshaw/jupyterlab-execute-time/blob/master/docs/execute-time-screenshot.png?raw=true)
 
 This is inspired by the notebook version [here](https://github.com/ipython-contrib/jupyter_contrib_nbextensions/blob/master/src/jupyter_contrib_nbextensions/nbextensions/execute_time).
 
