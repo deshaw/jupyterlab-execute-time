@@ -17,3 +17,8 @@
   font-size: 80%;
   border-top: 1px solid #cfcfcf;
 }
+
+.execute-time-right-aligned {
+  text-align: right;
+  padding-right: 2px;
+}

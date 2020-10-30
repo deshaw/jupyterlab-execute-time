@@ -14,6 +14,12 @@
       "title": "Highlight",
       "description": "Highlight the execution time on completion",
       "default": true
+    },
+    "right_aligned": {
+      "type": "boolean",
+      "title": "Right aligned",
+      "description": "Align the execution time to the right",
+      "default": false
     }
   }
 }
