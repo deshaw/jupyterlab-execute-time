@@ -15,11 +15,11 @@
       "description": "Highlight the execution time on completion",
       "default": true
     },
-    "right_aligned": {
-      "type": "boolean",
-      "title": "Right aligned",
-      "description": "Align the execution time to the right",
-      "default": false
+    "display": {
+      "type": "string",
+      "title": "Display",
+      "description": "How to display the execution time. Possible values are: \"left\" or \"right\"",
+      "default": "left"
     }
   }
 }

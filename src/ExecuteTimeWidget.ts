@@ -12,7 +12,6 @@ import { getTimeDiff, getTimeString } from './formatters';
 
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
-const EXECUTE_TIME_CLASS_RIGHT_ALIGNED = 'execute-time-right-aligned';
 
 // How long do we animate the color for
 const ANIMATE_TIME_MS = 1000;
@@ -21,7 +20,7 @@ const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
 export interface IExecuteTimeSettings {
   enabled: boolean;
   highlight: boolean;
-  right_aligned: boolean;
+  display: string;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -133,10 +132,9 @@ export default class ExecuteTimeWidget extends Widget {
       );
       if (!executionTimeNode) {
         executionTimeNode = document.createElement('div') as HTMLDivElement;
-        executionTimeNode.className = EXECUTE_TIME_CLASS;
-        if (this._settings.right_aligned) {
-          executionTimeNode.className += ' ' + EXECUTE_TIME_CLASS_RIGHT_ALIGNED;
-        }
+        const displayClass =
+          EXECUTE_TIME_CLASS + '-display-' + this._settings.display;
+        executionTimeNode.className = EXECUTE_TIME_CLASS + ' ' + displayClass;
         editorWidget.node.append(executionTimeNode);
       }
       // More info about timing: https://jupyter-client.readthedocs.io/en/stable/messaging.html#messages-on-the-shell-router-dealer-channel
@@ -187,8 +185,7 @@ export default class ExecuteTimeWidget extends Widget {
   _updateSettings(settings: ISettingRegistry.ISettings) {
     this._settings.enabled = settings.get('enabled').composite as boolean;
     this._settings.highlight = settings.get('highlight').composite as boolean;
-    this._settings.right_aligned = settings.get('right_aligned')
-      .composite as boolean;
+    this._settings.display = settings.get('display').composite as string;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -214,6 +211,6 @@ export default class ExecuteTimeWidget extends Widget {
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,
-    right_aligned: false
+    display: 'left'
   };
 }
