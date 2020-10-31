@@ -20,7 +20,7 @@ const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
 export interface IExecuteTimeSettings {
   enabled: boolean;
   highlight: boolean;
-  display: string;
+  positioning: string;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -56,9 +56,10 @@ export default class ExecuteTimeWidget extends Widget {
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
       cellModel.metadata.changed.connect(fn);
-      // In case there was already metadata (do not highlight on first load)
-      this._cellMetadataChanged(cellModel, true);
     }
+    // Always re-render cells.
+    // In case there was already metadata: do not highlight on first load.
+    this._cellMetadataChanged(cellModel, true);
   }
 
   _deregisterMetadataChanges(cellModel: ICellModel) {
@@ -132,11 +133,26 @@ export default class ExecuteTimeWidget extends Widget {
       );
       if (!executionTimeNode) {
         executionTimeNode = document.createElement('div') as HTMLDivElement;
-        const displayClass =
-          EXECUTE_TIME_CLASS + '-display-' + this._settings.display;
-        executionTimeNode.className = EXECUTE_TIME_CLASS + ' ' + displayClass;
         editorWidget.node.append(executionTimeNode);
       }
+
+      let positioning;
+      switch (this._settings.positioning) {
+        case 'left':
+          positioning = 'left';
+          break;
+        case 'right':
+          positioning = 'right';
+          break;
+        default:
+          console.error(
+            `'${positioning}' is not a valid type for the setting 'positioning'`
+          );
+      }
+      const positioningClass =
+        EXECUTE_TIME_CLASS + '-positioning-' + this._settings.positioning;
+      executionTimeNode.className = EXECUTE_TIME_CLASS + ' ' + positioningClass;
+
       // More info about timing: https://jupyter-client.readthedocs.io/en/stable/messaging.html#messages-on-the-shell-router-dealer-channel
       // A cell is queued when the kernel has received the message
       // A cell is running when the kernel has started executing
@@ -185,7 +201,8 @@ export default class ExecuteTimeWidget extends Widget {
   _updateSettings(settings: ISettingRegistry.ISettings) {
     this._settings.enabled = settings.get('enabled').composite as boolean;
     this._settings.highlight = settings.get('highlight').composite as boolean;
-    this._settings.display = settings.get('display').composite as string;
+    this._settings.positioning = settings.get('positioning')
+      .composite as string;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -211,6 +228,6 @@ export default class ExecuteTimeWidget extends Widget {
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,
-    display: 'left'
+    positioning: 'left'
   };
 }

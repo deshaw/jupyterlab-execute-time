@@ -15,11 +15,12 @@
       "description": "Highlight the execution time on completion",
       "default": true
     },
-    "display": {
+    "positioning": {
       "type": "string",
-      "title": "Display",
-      "description": "How to display the execution time. Possible values are: \"left\" or \"right\"",
-      "default": "left"
+      "title": "Positioning",
+      "description": "How to position the execution time. Possible values are: \"left\" or \"right\"",
+      "default": "left",
+      "enum": ["left", "right"]
     }
   }
 }

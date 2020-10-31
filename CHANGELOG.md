@@ -2,6 +2,8 @@
 
 ### Added
 
+- The ability to specify the position of the execute time ('left' or 'right').
+
 - Public release
 
 The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and
