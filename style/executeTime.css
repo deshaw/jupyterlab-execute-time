@@ -26,3 +26,7 @@
 .execute-time-positioning-right {
   text-align: right;
 }
+
+.execute-time-hidden {
+  display: none;
+}

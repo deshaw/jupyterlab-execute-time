@@ -21,6 +21,12 @@
       "description": "How to position the execution time. Possible values are: \"left\" or \"right\"",
       "default": "left",
       "enum": ["left", "right"]
+    },
+    "minimal_time": {
+      "type": "number",
+      "title": "Minimal execution time",
+      "description": "The minimal execution time (in ms) before it is reported.",
+      "default": 0
     }
   }
 }
