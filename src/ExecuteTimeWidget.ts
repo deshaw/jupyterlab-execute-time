@@ -35,7 +35,7 @@ export default class ExecuteTimeWidget extends Widget {
       },
       (err: Error) => {
         console.error(
-          `Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`
+          `jupyterlab-execute-time: Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`
         );
       }
     );
@@ -149,9 +149,8 @@ export default class ExecuteTimeWidget extends Widget {
             `'${positioning}' is not a valid type for the setting 'positioning'`
           );
       }
-      const positioningClass =
-        EXECUTE_TIME_CLASS + '-positioning-' + this._settings.positioning;
-      executionTimeNode.className = EXECUTE_TIME_CLASS + ' ' + positioningClass;
+      const positioningClass = `${EXECUTE_TIME_CLASS}-positioning-${this._settings.positioning}`;
+      executionTimeNode.className = `${EXECUTE_TIME_CLASS} ${positioningClass}`;
 
       // More info about timing: https://jupyter-client.readthedocs.io/en/stable/messaging.html#messages-on-the-shell-router-dealer-channel
       // A cell is queued when the kernel has received the message

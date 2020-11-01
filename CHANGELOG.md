@@ -1,8 +1,12 @@
-## [1.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.0.0...v1.0.0) (2020-04-07)
+## [1.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.0.0...v1.1.0) (UNRELEASED)
 
 ### Added
 
-- The ability to specify the position of the execute time ('left' or 'right').
+- The ability to specify the position of the execute time (`left` or `right`) ([#16](https://github.com/deshaw/jupyterlab-execute-time/pull/16))
+
+## [1.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.0.0...v1.0.0) (2020-04-07)
+
+### Added
 
 - Public release
 

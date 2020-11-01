@@ -82,9 +82,7 @@ This project is released under a [BSD-3-Clause license](https://github.com/desha
 [npm-url]: https://npmjs.org/package/jupyterlab-execute-time
 [npm-image]: https://badge.fury.io/js/jupyterlab-execute-time.png
 [npm-dm-image]: https://img.shields.io/npm/dm/jupyterlab-execute-time.svg
-
 [travis-url]: http://travis-ci.org/deshaw/jupyterlab-execute-time
 [travis-image]: https://secure.travis-ci.org/deshaw/jupyterlab-execute-time.png?branch=master
-
 [badge-binder]: https://mybinder.org/badge_logo.svg
 [binder]: https://mybinder.org/v2/gh/deshaw/jupyterlab-execute-time/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb
