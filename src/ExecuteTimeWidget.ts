@@ -110,10 +110,7 @@ export default class ExecuteTimeWidget extends Widget {
    * @private
    */
   _removeExecuteNode(cell: CodeCell) {
-    const editorWidget = cell.inputArea.editorWidget;
-    const executionTimeNode = editorWidget.node.querySelector(
-      `.${EXECUTE_TIME_CLASS}`
-    );
+    const executionTimeNode = cell.node.querySelector(`.${EXECUTE_TIME_CLASS}`);
     if (executionTimeNode) {
       executionTimeNode.remove();
     }
@@ -133,13 +130,20 @@ export default class ExecuteTimeWidget extends Widget {
       'execution'
     ) as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
-      const editorWidget = cell.inputArea.editorWidget;
-      let executionTimeNode: HTMLDivElement = editorWidget.node.querySelector(
+      let executionTimeNode: HTMLDivElement = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
+      const parentNode =
+        this._settings.positioning === 'hover'
+          ? cell.inputArea.node.parentNode
+          : cell.inputArea.editorWidget.node;
+
       if (!executionTimeNode) {
         executionTimeNode = document.createElement('div') as HTMLDivElement;
-        editorWidget.node.append(executionTimeNode);
+        parentNode.append(executionTimeNode);
+      } else if (executionTimeNode.parentNode !== parentNode) {
+        executionTimeNode.remove();
+        parentNode.append(executionTimeNode);
       }
 
       let positioning;
@@ -149,6 +153,9 @@ export default class ExecuteTimeWidget extends Widget {
           break;
         case 'right':
           positioning = 'right';
+          break;
+        case 'hover':
+          positioning = 'hover';
           break;
         default:
           console.error(

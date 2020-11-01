@@ -19,14 +19,30 @@
   padding: 0 2px;
 }
 
-.execute-time-positioning-left {
+.execute-time.execute-time-positioning-left {
   text-align: left;
 }
 
-.execute-time-positioning-right {
+.execute-time.execute-time-positioning-right {
   text-align: right;
 }
 
-.execute-time-hidden {
+.execute-time.execute-time-positioning-hover {
+  display: none;
+}
+
+.jp-CodeCell:hover .execute-time.execute-time-positioning-hover,
+.jp-CodeCell.jp-mod-active .execute-time.execute-time-positioning-hover {
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: -1.25em;
+  border: 1px solid #cfcfcf;
+  border-width: 0 1px 1px 1px;
+  height: 1.25em;
+  z-index: 3;
+}
+
+.execute-time.execute-time-hidden {
   display: none;
 }
