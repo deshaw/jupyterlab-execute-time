@@ -16,4 +16,13 @@
   font-family: monospace;
   font-size: 80%;
   border-top: 1px solid #cfcfcf;
+  padding: 0 2px;
+}
+
+.execute-time-positioning-left {
+  text-align: left;
+}
+
+.execute-time-positioning-right {
+  text-align: right;
 }
