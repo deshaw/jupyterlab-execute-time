@@ -21,12 +21,6 @@
       "description": "How to position the execution time. Possible values are: \"left\", \"right\" or \"hover\".",
       "default": "left",
       "enum": ["left", "right", "hover"]
-    },
-    "minimal_time": {
-      "type": "number",
-      "title": "Minimal execution time",
-      "description": "The minimal execution time (in ms) before it is reported.",
-      "default": 0
     }
   }
 }

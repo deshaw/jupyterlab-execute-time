@@ -9,7 +9,6 @@ import {
 } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
 import { getTimeDiff, getTimeString } from './formatters';
-import { differenceInMilliseconds } from 'date-fns';
 
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
@@ -22,7 +21,6 @@ export interface IExecuteTimeSettings {
   enabled: boolean;
   highlight: boolean;
   positioning: string;
-  minimal_time: number;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -121,11 +119,7 @@ export default class ExecuteTimeWidget extends Widget {
    * @param cell
    * @private
    */
-  _updateCodeCell(
-    cell: CodeCell,
-    disableHighlight: boolean,
-    disableNestedCall: boolean = false
-  ) {
+  _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
     const executionMetadata = cell.model.metadata.get(
       'execution'
     ) as JSONObject;
@@ -183,22 +177,6 @@ export default class ExecuteTimeWidget extends Widget {
         | null;
       const endTime = endTimeStr ? new Date(endTimeStr) : null;
 
-      const minimal_time = this._settings.minimal_time;
-      const runtime = differenceInMilliseconds(
-        endTime ? endTime : new Date(),
-        startTime
-      );
-      if (minimal_time > 0 && (!startTime || runtime < minimal_time)) {
-        executionTimeNode.className += ` ${EXECUTE_TIME_CLASS}-hidden`;
-        // Force update when cell is being executed but hasn't reached the minimal execution time yet
-        if (!disableNestedCall && startTime) {
-          setTimeout(() => {
-            // The hidden class should not directly be removed here; it's possible the cells metadata has changed.
-            this._updateCodeCell(cell, disableHighlight, true);
-          }, minimal_time);
-        }
-      }
-
       let msg = '';
       if (endTime) {
         msg = `Last executed at ${getTimeString(endTime)} in ${getTimeDiff(
@@ -231,8 +209,6 @@ export default class ExecuteTimeWidget extends Widget {
     this._settings.highlight = settings.get('highlight').composite as boolean;
     this._settings.positioning = settings.get('positioning')
       .composite as string;
-    this._settings.minimal_time = settings.get('minimal_time')
-      .composite as number;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -258,7 +234,6 @@ export default class ExecuteTimeWidget extends Widget {
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,
-    positioning: 'left',
-    minimal_time: 0
+    positioning: 'left'
   };
 }
