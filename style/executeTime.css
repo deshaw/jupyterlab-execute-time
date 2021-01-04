@@ -31,8 +31,7 @@
   display: none;
 }
 
-.jp-CodeCell:hover .execute-time.execute-time-positioning-hover,
-.jp-CodeCell.jp-mod-active .execute-time.execute-time-positioning-hover {
+.jp-Cell-inputWrapper:hover .execute-time.execute-time-positioning-hover {
   display: block;
   position: absolute;
   right: 0;
