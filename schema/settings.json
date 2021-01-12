@@ -18,9 +18,9 @@
     "positioning": {
       "type": "string",
       "title": "Positioning",
-      "description": "How to position the execution time. Possible values are: \"left\" or \"right\"",
+      "description": "How to position the execution time. Possible values are: \"left\", \"right\" or \"hover\".",
       "default": "left",
-      "enum": ["left", "right"]
+      "enum": ["left", "right", "hover"]
     }
   }
 }
