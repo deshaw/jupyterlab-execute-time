@@ -1,4 +1,4 @@
-## [2.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.1.0...v2.0.0) (UNRELEASED)
+## [2.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.1.0...v2.0.0) (2021-01-19)
 
 ### Changed
 
