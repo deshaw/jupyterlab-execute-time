@@ -1,7 +1,7 @@
 # jupyterlab-execute-time
 
-[![NPM version][npm-image]][npm-url] [![NPM DM][npm-dm-image]][npm-url]
-[![Github Actions Status](https://github.com/deshaw/jupyterlab-execute-time.git/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/deshaw/jupyterlab-execute-time.git/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb)
+[![PyPI version][pypi-image]][pypi-url] [![PyPI DM][pypi-dm-image]][pypi-url]
+[![Github Actions Status][github-status-image]] [![Binder][binder-image]][binder-url]
 
 Display cell timings in Jupyter Lab
 
@@ -81,6 +81,9 @@ This project is released under a [BSD-3-Clause license](https://github.com/desha
 
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part.
 
-[npm-url]: https://npmjs.org/package/jupyterlab-execute-time
-[npm-image]: https://badge.fury.io/js/jupyterlab-execute-time.png
-[npm-dm-image]: https://img.shields.io/npm/dm/jupyterlab-execute-time.svg
+[pypi-url]: https://pypi.org/project/jupyterlab-execute-time
+[pypi-image]: https://img.shields.io/pypi/v/jupyterlab-execute-time
+[pypi-dm-image]: https://img.shields.io/pypi/dm/jupyterlab-execute-time
+[github-status-image]: https://github.com/deshaw/jupyterlab-execute-time/workflows/Build/badge.svg
+[binder-image]: https://mybinder.org/badge_logo.svg
+[binder-url]: https://mybinder.org/v2/gh/deshaw/jupyterlab-execute-time.git/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb
