@@ -1,3 +1,9 @@
+## [2.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.1.0...v2.0.0) (UNRELEASED)
+
+### Changed
+
+- **Breaking**: Adds support for Jupyterlab@3.x and removes support for Jupyterlab@2.x. To migrate, after installing Jupyterlab@3.x run `pip install jupyterlab_execute_time`.
+
 ## [1.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.0.0...v1.1.0) (2021-01-18)
 
 ### Added
