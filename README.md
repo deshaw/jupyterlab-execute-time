@@ -1,7 +1,7 @@
 # jupyterlab-execute-time
 
 [![PyPI version][pypi-image]][pypi-url] [![PyPI DM][pypi-dm-image]][pypi-url]
-[![Github Actions Status][github-status-image]] [![Binder][binder-image]][binder-url]
+[![Github Actions Status][github-status-image]][github-status-url] [![Binder][binder-image]][binder-url]
 
 Display cell timings in Jupyter Lab
 
@@ -85,5 +85,6 @@ This project is released under a [BSD-3-Clause license](https://github.com/desha
 [pypi-image]: https://img.shields.io/pypi/v/jupyterlab-execute-time
 [pypi-dm-image]: https://img.shields.io/pypi/dm/jupyterlab-execute-time
 [github-status-image]: https://github.com/deshaw/jupyterlab-execute-time/workflows/Build/badge.svg
+[github-status-url]: https://github.com/deshaw/jupyterlab-execute-time/actions?query=workflow%3ABuild
 [binder-image]: https://mybinder.org/badge_logo.svg
 [binder-url]: https://mybinder.org/v2/gh/deshaw/jupyterlab-execute-time.git/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb
