@@ -1,3 +1,9 @@
+## [2.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.0...v2.0.1) (2021-01-19)
+
+### Added
+
+- Fix broken README in release
+
 ## [2.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v1.1.0...v2.0.0) (2021-01-19)
 
 ### Changed

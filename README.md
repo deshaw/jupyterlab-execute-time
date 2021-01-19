@@ -59,6 +59,33 @@ By default, the `jlpm run build` command generates the source maps for this exte
 jupyter lab build --minimize=False
 ```
 
+#### Publishing
+
+Before starting, you'll need to have run: `pip install twine jupyter_packaging`
+
+1. Update the version in `package.json` and update the release date in `CHANGELOG.md`
+2. Commit the change in step 1, tag it, then push it
+```
+git commit -am <msg>
+git tag vX.Z.Y
+git push && git push --tags
+```
+3. Create the artifacts
+```
+rm -rf dist
+python setup.py sdist bdist_wheel
+```
+4. Test this against the test pypi. You can then install from here to test as well:
+```
+twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+# In a new venv
+pip install --index-url https://test.pypi.org/simple/ jupyterlab_execute_time
+```
+5. Upload this to pypi:
+```
+twine upload dist/*
+```
+
 ### Uninstall
 
 ```bash
