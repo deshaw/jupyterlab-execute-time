@@ -17,8 +17,16 @@ Note: for this to show anything, you need to enable cell timing in the notebook 
 
 ## Install
 
+To install this package with [`pip`](https://pip.pypa.io/en/stable/) run
+
 ```bash
 pip install jupyterlab_execute_time
+```
+
+To install this package with [`conda`](https://docs.conda.io/en/latest/) run
+
+```bash
+conda install -c conda-forge jupyterlab_execute_time 
 ```
 
 ## Contributing
