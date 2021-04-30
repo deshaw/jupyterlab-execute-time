@@ -4,33 +4,24 @@ jupyterlab_execute_time setup
 import json
 import os
 
-from jupyter_packaging import (
-    create_cmdclass, install_npm, ensure_targets,
-    combine_commands, skip_if_exists
-)
+from jupyter_packaging import wrap_installers, npm_builder, get_data_files
 import setuptools
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name="jupyterlab_execute_time"
+name = "jupyterlab_execute_time"
 
 # Get our version
-with open(os.path.join(HERE, 'package.json')) as f:
-    version = json.load(f)['version']
+with open(os.path.join(HERE, "package.json")) as f:
+    version = json.load(f)["version"]
 
 lab_path = os.path.join(HERE, name, "labextension")
 
 # Representative files that should exist after a successful build
-jstargets = [
+ensured_targets = [
     os.path.join(lab_path, "package.json"),
 ]
-
-package_data_spec = {
-    name: [
-        "*"
-    ]
-}
 
 labext_name = "jupyterlab-execute-time"
 
@@ -39,21 +30,10 @@ data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
 ]
 
-cmdclass = create_cmdclass("jsdeps",
-    package_data_spec=package_data_spec,
-    data_files_spec=data_files_spec
+post_develop = npm_builder(
+    build_cmd="install:extension", source_dir="src", build_dir=lab_path
 )
-
-js_command = combine_commands(
-    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
-    ensure_targets(jstargets),
-)
-
-is_repo = os.path.exists(os.path.join(HERE, ".git"))
-if is_repo:
-    cmdclass["jsdeps"] = js_command
-else:
-    cmdclass["jsdeps"] = skip_if_exists(jstargets, js_command)
+cmdclass = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -64,13 +44,12 @@ setup_args = dict(
     url="https://github.com/deshaw/jupyterlab-execute-time.git",
     author="Marc Udoff",
     description="Display cell timings in Jupyter Lab",
-    long_description= long_description,
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
+    cmdclass=cmdclass,
+    data_files=get_data_files(data_files_spec),
     packages=setuptools.find_packages(),
-    install_requires=[
-        "jupyterlab>=3.0.0rc13,<4",
-    ],
+    install_requires=["jupyterlab>=3.0.0rc13,<4", "jupyter_packaging~=0.9,<2"],
     zip_safe=False,
     include_package_data=True,
     python_requires=">=3.6",
