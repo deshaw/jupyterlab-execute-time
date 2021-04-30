@@ -43,6 +43,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       'Notebook',
       new ExecuteTimeWidgetExtension(settingRegistry)
     );
+
+    // eslint-disable-next-line no-console
+    console.log('JupyterLab extension jupyterlab-execute-time is activated!');
   }
 };
 
