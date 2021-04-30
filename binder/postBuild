@@ -45,7 +45,7 @@ _("jupyter", "labextension", "list")
 _("mkdir", "-p", "~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/")
 
 # We may not need this after https://github.com/jupyterlab/jupyterlab/pull/9561
-with open('~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/', 'w') as f:
+with open('~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings', 'w') as f:
     f.write('{"recordTiming": true}')
 
 print("JupyterLab with jupyterlab_execute_time is ready to run with:\n")
