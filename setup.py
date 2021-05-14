@@ -2,26 +2,20 @@
 jupyterlab_execute_time setup
 """
 import json
-import os
+from pathlib import Path
 
 from jupyter_packaging import wrap_installers, npm_builder, get_data_files
 import setuptools
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+HERE = Path(__file__).parent.resolve()
 
 # The name of the project
 name = "jupyterlab_execute_time"
 
-# Get our version
-with open(os.path.join(HERE, "package.json")) as f:
-    version = json.load(f)["version"]
-
-lab_path = os.path.join(HERE, name, "labextension")
+lab_path = HERE / name / "labextension"
 
 # Representative files that should exist after a successful build
-ensured_targets = [
-    os.path.join(lab_path, "package.json"),
-]
+ensured_targets = [str(lab_path / "package.json"), str(lab_path / "static/style.js")]
 
 labext_name = "jupyterlab-execute-time"
 
@@ -35,15 +29,17 @@ post_develop = npm_builder(
 )
 cmdclass = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+long_description = (HERE / "README.md").read_text()
+
+# Get the package info from package.json
+pkg_json = json.loads((HERE / "package.json").read_bytes())
 
 setup_args = dict(
     name=name,
-    version=version,
-    url="https://github.com/deshaw/jupyterlab-execute-time.git",
+    version=pkg_json["version"],
+    url=pkg_json["homepage"],
     author="Marc Udoff",
-    description="Display cell timings in Jupyter Lab",
+    description=pkg_json["description"],
     long_description=long_description,
     long_description_content_type="text/markdown",
     cmdclass=cmdclass,
@@ -53,7 +49,7 @@ setup_args = dict(
     zip_safe=False,
     include_package_data=True,
     python_requires=">=3.6",
-    license="BSD-3-Clause",
+    license=pkg_json["license"],
     platforms="Linux, Mac OS X, Windows",
     keywords=["Jupyter", "JupyterLab", "JupyterLab3"],
     classifiers=[
