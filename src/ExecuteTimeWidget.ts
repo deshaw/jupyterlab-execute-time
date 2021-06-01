@@ -134,7 +134,9 @@ export default class ExecuteTimeWidget extends Widget {
 
       if (!executionTimeNode) {
         executionTimeNode = document.createElement('div') as HTMLDivElement;
-        parentNode.append(executionTimeNode);
+        if (!cell.inputHidden) {
+          parentNode.append(executionTimeNode);
+        }
       } else if (executionTimeNode.parentNode !== parentNode) {
         executionTimeNode.remove();
         parentNode.append(executionTimeNode);
