@@ -1,3 +1,9 @@
+## [2.0.5](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.4...v2.0.5) (2021-7-12)
+
+### Fixed
+
+- Issues with build
+
 ## [2.0.4](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.3...v2.0.4) (2021-6-12)
 
 ### Fixed

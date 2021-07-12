@@ -1,11 +1,12 @@
 include LICENSE.txt
 include README.md
 include pyproject.toml
-include jupyter-config/jupyterlab_execute_time.json
+recursive-include jupyter-config *.json
 
 include package.json
 include install.json
 include ts*.json
+include yarn.lock
 
 graft jupyterlab_execute_time/labextension
 
@@ -14,6 +15,7 @@ graft src
 graft style
 prune **/node_modules
 prune lib
+prune binder
 
 # Patterns to exclude from any directory
 global-exclude *~
