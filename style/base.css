@@ -1,7 +1,7 @@
 /* Transition to highlight a cell change */
 @keyframes executeHighlight {
   from {
-    background-color:  var(--md-blue-100, #9fccff);
+    background-color: var(--md-blue-100, #9fccff);
   }
   to {
     background-color: var(--jp-cell-editor-background);
