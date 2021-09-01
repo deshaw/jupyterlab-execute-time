@@ -1,7 +1,7 @@
 /* Transition to highlight a cell change */
 @keyframes executeHighlight {
   from {
-    background-color: #9fccff;
+    background-color: var(--md-blue-100, #9fccff);
   }
   to {
     background-color: var(--jp-cell-editor-background);
@@ -13,9 +13,9 @@
   color: var(--jp-mirror-editor-variable-color);
   display: block;
   margin-top: 2px;
-  font-family: monospace;
+  font-family: var(--jp-code-font-family, monospace);
   font-size: 80%;
-  border-top: 1px solid #cfcfcf;
+  border-top: 1px solid var(--jp-cell-editor-border-color, #cfcfcf);
   padding: 0 2px;
 }
 
@@ -36,7 +36,7 @@
   position: absolute;
   right: 0;
   bottom: -1.25em;
-  border: 1px solid #cfcfcf;
+  border: 1px solid var(--jp-cell-editor-border-color, #cfcfcf);
   border-width: 0 1px 1px 1px;
   height: 1.25em;
   z-index: 3;
