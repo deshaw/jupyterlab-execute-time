@@ -5,7 +5,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   IObservableJSON,
   IObservableList,
-  IObservableUndoableList
+  IObservableUndoableList,
 } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
 import { getTimeDiff, getTimeString } from './formatters';
@@ -236,6 +236,6 @@ export default class ExecuteTimeWidget extends Widget {
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,
-    positioning: 'left'
+    positioning: 'left',
   };
 }

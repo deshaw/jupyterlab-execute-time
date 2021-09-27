@@ -1,11 +1,11 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
 import {
   INotebookTracker,
   INotebookModel,
-  NotebookPanel
+  NotebookPanel,
 } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
@@ -46,7 +46,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // eslint-disable-next-line no-console
     console.log('JupyterLab extension jupyterlab-execute-time is activated!');
-  }
+  },
 };
 
 export default extension;
