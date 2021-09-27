@@ -178,9 +178,19 @@ export default class ExecuteTimeWidget extends Widget {
         | string
         | null;
       const endTime = endTimeStr ? new Date(endTimeStr) : null;
+      // shell.execute_reply can be one of:  One of: 'ok' OR 'error' OR 'aborted'
+      // We want to remove the cases where it's not 'ok', but that's not in the metadata
+      // So we assume that if iopub.execute_input never happened, the cell never ran, thus not ok.
+      // This is assumed to be true because per the spec below, the code being executed should be sent to all frontends
+      // See: https://jupyter-client.readthedocs.io/en/stable/messaging.html#messages-on-the-shell-router-dealer-channel
+      // See: https://jupyter-client.readthedocs.io/en/stable/messaging.html#code-inputs
+      const isLikelyAborted =
+        endTimeStr && !executionMetadata['iopub.execute_input'];
 
       let msg = '';
-      if (endTime) {
+      if (isLikelyAborted) {
+        msg = '';
+      } else if (endTime) {
         msg = `Last executed at ${getTimeString(endTime)} in ${getTimeDiff(
           endTime,
           startTime
