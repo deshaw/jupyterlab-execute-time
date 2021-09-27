@@ -1,6 +1,6 @@
 import { Widget } from '@lumino/widgets';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
-import { NotebookPanel } from '@jupyterlab/notebook';
+import { NotebookPanel, INotebookTracker } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   IObservableJSON,
@@ -24,9 +24,15 @@ export interface IExecuteTimeSettings {
 }
 
 export default class ExecuteTimeWidget extends Widget {
-  constructor(panel: NotebookPanel, settingRegistry: ISettingRegistry) {
+  constructor(
+    panel: NotebookPanel,
+    tracker: INotebookTracker,
+    settingRegistry: ISettingRegistry
+  ) {
     super();
     this._panel = panel;
+    this._tracker = tracker;
+
     this.updateConnectedCell = this.updateConnectedCell.bind(this);
     settingRegistry.load(`${PLUGIN_NAME}:settings`).then(
       (settings: ISettingRegistry.ISettings) => {
@@ -141,6 +147,14 @@ export default class ExecuteTimeWidget extends Widget {
         executionTimeNode.remove();
         parentNode.append(executionTimeNode);
       }
+      // Ensure that the current cell onclick actives the current cell
+      executionTimeNode.onclick = () => {
+        // This check makes sure that range selections (mostly) work
+        // activate breaks the range selection otherwise
+        if (this._tracker.activeCell !== cell) {
+          cell.activate();
+        }
+      };
 
       let positioning;
       switch (this._settings.positioning) {
@@ -232,6 +246,7 @@ export default class ExecuteTimeWidget extends Widget {
       args: IObservableJSON.IChangedArgs
     ) => void;
   } = {};
+  private _tracker: INotebookTracker;
   private _panel: NotebookPanel;
   private _settings: IExecuteTimeSettings = {
     enabled: false,

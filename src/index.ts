@@ -12,8 +12,9 @@ import { DocumentRegistry } from '@jupyterlab/docregistry';
 import ExecuteTimeWidget, { PLUGIN_NAME } from './ExecuteTimeWidget';
 
 class ExecuteTimeWidgetExtension implements DocumentRegistry.WidgetExtension {
-  constructor(settingRegistry: ISettingRegistry) {
+  constructor(tracker: INotebookTracker, settingRegistry: ISettingRegistry) {
     this._settingRegistry = settingRegistry;
+    this._tracker = tracker;
   }
 
   // We get a notebook panel because of addWidgetExtension('Notebook', ...) below
@@ -21,10 +22,11 @@ class ExecuteTimeWidgetExtension implements DocumentRegistry.WidgetExtension {
     panel: NotebookPanel,
     context: DocumentRegistry.IContext<INotebookModel>
   ) {
-    return new ExecuteTimeWidget(panel, this._settingRegistry);
+    return new ExecuteTimeWidget(panel, this._tracker, this._settingRegistry);
   }
 
   private _settingRegistry: ISettingRegistry;
+  private _tracker: INotebookTracker;
 }
 
 /**
@@ -41,7 +43,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   ) => {
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new ExecuteTimeWidgetExtension(settingRegistry)
+      new ExecuteTimeWidgetExtension(tracker, settingRegistry)
     );
 
     // eslint-disable-next-line no-console
