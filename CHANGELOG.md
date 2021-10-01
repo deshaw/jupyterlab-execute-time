@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.0.6) (UNRELEASED)
+
+### Fixed
+
+- Click on a execute time output also selects the cell
+- Coloring when used with certain themes
+
 ## [2.0.5](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.4...v2.0.5) (2021-7-12)
 
 ### Fixed
