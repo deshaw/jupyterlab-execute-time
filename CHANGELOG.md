@@ -1,4 +1,8 @@
-## [2.0.6](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.0.6) (UNRELEASED)
+## [2.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.1.0) (2021-10-1)
+
+### Added
+
+- Ability to keep only cell execution time for cells that took longer than a threshold (still defaults to always show)
 
 ### Fixed
 

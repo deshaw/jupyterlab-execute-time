@@ -9,6 +9,7 @@ import {
 } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
 import { getTimeDiff, getTimeString } from './formatters';
+import { differenceInMilliseconds } from 'date-fns';
 
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
@@ -21,6 +22,7 @@ export interface IExecuteTimeSettings {
   enabled: boolean;
   highlight: boolean;
   positioning: string;
+  minTime: number;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -205,10 +207,15 @@ export default class ExecuteTimeWidget extends Widget {
       if (isLikelyAborted) {
         msg = '';
       } else if (endTime) {
-        msg = `Last executed at ${getTimeString(endTime)} in ${getTimeDiff(
-          endTime,
-          startTime
-        )}`;
+        if (
+          this._settings.minTime <=
+          differenceInMilliseconds(endTime, startTime) / 1000.0
+        ) {
+          msg = `Last executed at ${getTimeString(endTime)} in ${getTimeDiff(
+            endTime,
+            startTime
+          )}`;
+        }
       } else if (startTime) {
         msg = `Execution started at ${getTimeString(startTime)}`;
       } else if (queuedTime) {
@@ -235,6 +242,7 @@ export default class ExecuteTimeWidget extends Widget {
     this._settings.highlight = settings.get('highlight').composite as boolean;
     this._settings.positioning = settings.get('positioning')
       .composite as string;
+    this._settings.minTime = settings.get('minTime').composite as number;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -262,5 +270,6 @@ export default class ExecuteTimeWidget extends Widget {
     enabled: false,
     highlight: true,
     positioning: 'left',
+    minTime: 0,
   };
 }
