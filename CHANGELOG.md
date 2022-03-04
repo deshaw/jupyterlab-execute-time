@@ -1,4 +1,3 @@
-
 ## [2.1.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.1.0...v2.1.1) (2022-3-4)
 
 ### Added
