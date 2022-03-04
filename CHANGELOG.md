@@ -1,3 +1,10 @@
+
+## [2.1.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.1.0...v2.1.1) (2022-3-4)
+
+### Added
+
+- Add a Text Contrast setting that allows users to select text color contrast.
+
 ## [2.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.1.0) (2021-10-1)
 
 ### Added
