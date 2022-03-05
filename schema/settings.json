@@ -27,6 +27,13 @@
       "title": "Minimum time to display (s)",
       "description": "Minimum cell execution time in seconds to show timing info (0 means always)",
       "default": 0
+    },
+    "textContrast": {
+      "type": "string",
+      "title": "Text Contrast",
+      "description": "Text color contrast. Possible values are: \"high\", \"low\".",
+      "default": "high",
+      "enum": ["high", "low"]
     }
   }
 }

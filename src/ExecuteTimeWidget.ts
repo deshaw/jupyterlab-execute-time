@@ -23,6 +23,7 @@ export interface IExecuteTimeSettings {
   highlight: boolean;
   positioning: string;
   minTime: number;
+  textContrast: string;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -175,7 +176,8 @@ export default class ExecuteTimeWidget extends Widget {
           );
       }
       const positioningClass = `${EXECUTE_TIME_CLASS}-positioning-${this._settings.positioning}`;
-      executionTimeNode.className = `${EXECUTE_TIME_CLASS} ${positioningClass}`;
+      const textContrastClass = `${EXECUTE_TIME_CLASS}-contrast-${this._settings.textContrast}`;
+      executionTimeNode.className = `${EXECUTE_TIME_CLASS} ${positioningClass} ${textContrastClass}`;
 
       // More info about timing: https://jupyter-client.readthedocs.io/en/stable/messaging.html#messages-on-the-shell-router-dealer-channel
       // A cell is queued when the kernel has received the message
@@ -243,6 +245,8 @@ export default class ExecuteTimeWidget extends Widget {
     this._settings.positioning = settings.get('positioning')
       .composite as string;
     this._settings.minTime = settings.get('minTime').composite as number;
+    this._settings.textContrast = settings.get('textContrast')
+      .composite as string;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -271,5 +275,6 @@ export default class ExecuteTimeWidget extends Widget {
     highlight: true,
     positioning: 'left',
     minTime: 0,
+    textContrast: 'high',
   };
 }

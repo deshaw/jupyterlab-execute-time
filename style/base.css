@@ -10,13 +10,20 @@
 
 .execute-time {
   background-color: var(--jp-cell-editor-background);
-  color: var(--jp-mirror-editor-variable-color);
   display: block;
   margin-top: 2px;
   font-family: var(--jp-code-font-family, monospace);
   font-size: 80%;
   border-top: 1px solid var(--jp-cell-editor-border-color, #cfcfcf);
   padding: 0 2px;
+}
+
+.execute-time.execute-time-contrast-low {
+  color: var(--jp-ui-font-color3);
+}
+
+.execute-time.execute-time-contrast-high {
+  color: var(--jp-ui-font-color1);
 }
 
 .execute-time.execute-time-positioning-left {
