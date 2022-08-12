@@ -121,6 +121,9 @@ This plugin was contributed back to the community by the [D. E. Shaw group](http
 
 This project is released under a [BSD-3-Clause license](https://github.com/deshaw/jupyterlab-execute-time/blob/master/LICENSE.txt).
 
+We love contributions! Before you can contribute, please sign and submit this [Contributor License Agreement (CLA)](https://www.deshaw.com/oss/cla).
+This CLA is in place to protect all users of this project.
+
 "Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part.
 
 [pypi-url]: https://pypi.org/project/jupyterlab-execute-time
