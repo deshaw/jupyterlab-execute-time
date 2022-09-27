@@ -101,6 +101,17 @@ pip install --index-url https://test.pypi.org/simple/ jupyterlab_execute_time
 twine upload dist/*
 ```
 
+### FAQ
+
+Q: I installed `jupyterlab_execute_time` following the instructions above, but the execution time is not displayed in the notebook. Should I modify anything else?
+A: Check the settings in `jupyterlab` by clicking Settings -> Advanced Settings Editor -> Notebook, then click on "JSON Settings Editor" in the top right corner and check the value of the field `recordTiming`. If this value is set to `false`, then change it to `true` and execution time should appear during notebook execution.
+
+```json
+    // Recording timing
+    // Should timing data be recorded in cell metadata
+    "recordTiming": false,
+```
+
 ### Uninstall
 
 ```bash
