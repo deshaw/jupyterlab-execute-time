@@ -9,8 +9,6 @@ Display cell timings in Jupyter Lab
 
 This is inspired by the notebook version [here](https://github.com/ipython-contrib/jupyter_contrib_nbextensions/blob/master/src/jupyter_contrib_nbextensions/nbextensions/execute_time).
 
-Note: for this to show anything, you need to enable cell timing in the notebook via Settings->Advanced Settings Editor->Notebook: `{"recordTiming": true}`. This is a notebook metadata setting and not a plugin setting. The plugin just displays this data.
-
 ## Requirements
 
 - JupyterLab >= 3.0
@@ -28,6 +26,8 @@ To install this package with [`conda`](https://docs.conda.io/en/latest/) run
 ```bash
 conda install -c conda-forge jupyterlab_execute_time
 ```
+
+Note: for this to show anything, you need to enable cell timing in the notebook via Settings->Advanced Settings Editor->Notebook: `{"recordTiming": true}`. This is a notebook metadata setting and not a plugin setting. The plugin just displays this data.
 
 ## Contributing
 
@@ -99,17 +99,6 @@ pip install --index-url https://test.pypi.org/simple/ jupyterlab_execute_time
 
 ```
 twine upload dist/*
-```
-
-### FAQ
-
-Q: I installed `jupyterlab_execute_time` following the instructions above, but the execution time is not displayed in the notebook. Should I modify anything else?
-A: Check the settings in `jupyterlab` by clicking Settings -> Advanced Settings Editor -> Notebook, then click on "JSON Settings Editor" in the top right corner and check the value of the field `recordTiming`. If this value is set to `false`, then change it to `true` and execution time should appear during notebook execution.
-
-```json
-    // Recording timing
-    // Should timing data be recorded in cell metadata
-    "recordTiming": false,
 ```
 
 ### Uninstall
