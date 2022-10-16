@@ -27,7 +27,7 @@ To install this package with [`conda`](https://docs.conda.io/en/latest/) run
 conda install -c conda-forge jupyterlab_execute_time
 ```
 
-Note: for this to show anything, you need to enable cell timing in the notebook via Settings->Advanced Settings Editor->Notebook: `{"recordTiming": true}`. This is a notebook metadata setting and not a plugin setting. The plugin just displays this data.
+Note: By default, if this extension is enabled, it will automatically change your settings to record timing in the notebook metadata when it is loaded. If this fails, you can do this manually via Settings->Advanced Settings Editor->Notebook: `{"recordTiming": true}`. This is a notebook metadata setting and not a plugin setting. The plugin just displays this data.
 
 ## Contributing
 
