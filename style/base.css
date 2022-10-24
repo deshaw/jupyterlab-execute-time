@@ -10,7 +10,8 @@
 
 .execute-time {
   background-color: var(--jp-cell-editor-background);
-  display: block;
+  display: flex;
+  justify-content: space-between;
   margin-top: 2px;
   font-family: var(--jp-code-font-family, monospace);
   font-size: 80%;
@@ -27,11 +28,11 @@
 }
 
 .execute-time.execute-time-positioning-left {
-  text-align: left;
+  flex-direction: row;
 }
 
 .execute-time.execute-time-positioning-right {
-  text-align: right;
+  flex-direction: row-reverse;
 }
 
 .execute-time.execute-time-positioning-hover {

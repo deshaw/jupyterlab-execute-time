@@ -34,6 +34,18 @@
       "description": "Text color contrast. Possible values are: \"high\", \"low\".",
       "default": "high",
       "enum": ["high", "low"]
+    },
+    "showLiveExecutionTime": {
+      "type": "boolean",
+      "title": "Show Live Execution Time",
+      "description": "Show the current execution time / last execution time as a cell executes.",
+      "default": true
+    },
+    "history": {
+      "type": "boolean",
+      "title": "History of Cell Execution Time",
+      "description": "Show all previous execution times since the notebook was opened as a tooltip.",
+      "default": true
     }
   }
 }

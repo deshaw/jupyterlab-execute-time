@@ -1,10 +1,17 @@
-## [2.2.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.1.0...v2.2.0) (2022-3-4)
+## [2.3.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.2.0...v2.3.0) (UNRELEASED)
+
+### Added
+
+- Live execution time relative to last runtime. [#72](https://github.com/deshaw/jupyterlab-execute-time/pull/72)
+- Recent history of cell run timing via tooltip. [#72](https://github.com/deshaw/jupyterlab-execute-time/pull/72)
+
+## [2.2.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.1.0...v2.2.0) (2022-03-04)
 
 ### Added
 
 - Add a Text Contrast setting that allows users to select text color contrast.
 
-## [2.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.1.0) (2021-10-1)
+## [2.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.0.5...v2.1.0) (2021-10-01)
 
 ### Added
 

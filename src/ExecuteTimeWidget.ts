@@ -14,6 +14,9 @@ import { differenceInMilliseconds } from 'date-fns';
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
 
+const TOOLTIP_PREFIX = 'Previous Runs:';
+const PREV_DATA_EXECUTION_TIME_ATTR = 'data-prev-execution-time';
+
 // How long do we animate the color for
 const ANIMATE_TIME_MS = 1000;
 const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
@@ -24,6 +27,8 @@ export interface IExecuteTimeSettings {
   positioning: string;
   minTime: number;
   textContrast: string;
+  showLiveExecutionTime: boolean;
+  history: boolean;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -143,6 +148,13 @@ export default class ExecuteTimeWidget extends Widget {
 
       if (!executionTimeNode) {
         executionTimeNode = document.createElement('div') as HTMLDivElement;
+        executionTimeNode.appendChild(document.createElement('span'));
+        // Use this over gap as hover is not a flexbox
+        const spacer = document.createElement('div');
+        spacer.style.minWidth = '12px';
+        executionTimeNode.appendChild(spacer);
+        executionTimeNode.appendChild(document.createElement('span'));
+
         if (!cell.inputHidden) {
           parentNode.append(executionTimeNode);
         }
@@ -213,18 +225,73 @@ export default class ExecuteTimeWidget extends Widget {
           this._settings.minTime <=
           differenceInMilliseconds(endTime, startTime) / 1000.0
         ) {
-          msg = `Last executed at ${getTimeString(endTime)} in ${getTimeDiff(
-            endTime,
-            startTime
-          )}`;
+          const executionTime = getTimeDiff(endTime, startTime);
+          const lastExecutionTime = executionTimeNode.getAttribute(
+            PREV_DATA_EXECUTION_TIME_ATTR
+          );
+          // Store the last execution time in the node to be used for various options
+          executionTimeNode.setAttribute(
+            PREV_DATA_EXECUTION_TIME_ATTR,
+            executionTime
+          );
+          // Only add a tooltip for all non-displayed execution times.
+          if (this._settings.history && lastExecutionTime) {
+            let tooltip = executionTimeNode.getAttribute('title');
+            const newTooltipStart = TOOLTIP_PREFIX + '\n' + lastExecutionTime;
+            // We do this to keep the latest value at the start of the list
+            if (tooltip) {
+              tooltip = tooltip.replace(TOOLTIP_PREFIX, newTooltipStart);
+            } else {
+              tooltip = newTooltipStart;
+            }
+            executionTimeNode.setAttribute('title', tooltip);
+          }
+          executionTimeNode.children[2].textContent = '';
+
+          msg = `Last executed at ${getTimeString(
+            endTime
+          )} in ${executionTime}`;
         }
       } else if (startTime) {
+        if (this._settings.showLiveExecutionTime) {
+          const lastRunTime = executionTimeNode.getAttribute(
+            'data-prev-execution-time'
+          );
+          const workingTimer = setInterval(() => {
+            if (
+              !executionTimeNode.children[0].textContent.startsWith(
+                'Execution started at'
+              )
+            ) {
+              clearInterval(workingTimer);
+              return;
+            }
+            if (
+              this._settings.minTime <=
+              differenceInMilliseconds(new Date(), startTime) / 1000.0
+            ) {
+              const executionTime = getTimeDiff(new Date(), startTime);
+
+              executionTimeNode.children[2].textContent = `${executionTime} ${
+                lastRunTime ? `/ ${lastRunTime}` : ''
+              }`;
+            }
+          }, 100);
+        }
         msg = `Execution started at ${getTimeString(startTime)}`;
       } else if (queuedTime) {
+        const lastRunTime = executionTimeNode.getAttribute(
+          'data-prev-execution-time'
+        );
+        if (this._settings.showLiveExecutionTime && lastRunTime) {
+          executionTimeNode.children[2].textContent = `N/A / ${lastRunTime}`;
+        }
+
         msg = `Execution queued at ${getTimeString(queuedTime)}`;
       }
-      if (executionTimeNode.innerText !== msg) {
-        executionTimeNode.innerText = msg;
+      if (executionTimeNode.textContent !== msg) {
+        executionTimeNode.children[0].textContent = msg;
+
         if (!disableHighlight && this._settings.highlight && endTimeStr) {
           executionTimeNode.style.setProperty('animation', ANIMATE_CSS);
           setTimeout(
@@ -234,8 +301,14 @@ export default class ExecuteTimeWidget extends Widget {
         }
       }
     } else {
-      // Clean up in case it was removed
-      this._removeExecuteNode(cell);
+      // Hide it if data was removed (e.g. clear output).
+      // Don't remove as element store history, which are useful for later showing past runtime.
+      const executionTimeNode = cell.node.querySelector(
+        `.${EXECUTE_TIME_CLASS}`
+      );
+      if (executionTimeNode) {
+        executionTimeNode.classList.add('execute-time-hidden');
+      }
     }
   }
 
@@ -247,6 +320,9 @@ export default class ExecuteTimeWidget extends Widget {
     this._settings.minTime = settings.get('minTime').composite as number;
     this._settings.textContrast = settings.get('textContrast')
       .composite as string;
+    this._settings.showLiveExecutionTime = settings.get('showLiveExecutionTime')
+      .composite as boolean;
+    this._settings.history = settings.get('history').composite as boolean;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -276,5 +352,7 @@ export default class ExecuteTimeWidget extends Widget {
     positioning: 'left',
     minTime: 0,
     textContrast: 'high',
+    showLiveExecutionTime: true,
+    history: true,
   };
 }
