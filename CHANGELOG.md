@@ -4,6 +4,7 @@
 
 - Live execution time relative to last runtime. [#72](https://github.com/deshaw/jupyterlab-execute-time/pull/72)
 - Recent history of cell run timing via tooltip. [#72](https://github.com/deshaw/jupyterlab-execute-time/pull/72)
+- Auto opt-in to recoding cell timing for all notebooks. [#73](https://github.com/deshaw/jupyterlab-execute-time/pull/73)
 
 ## [2.2.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.1.0...v2.2.0) (2022-03-04)
 
