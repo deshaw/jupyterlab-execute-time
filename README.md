@@ -83,7 +83,8 @@ git push && git push --tags
 3. Create the artifacts
 
 ```
-rm -rf dist
+rm -rf dist build jupyterlab_execute_time/labextension
+jlpm run build
 python setup.py sdist bdist_wheel
 ```
 
