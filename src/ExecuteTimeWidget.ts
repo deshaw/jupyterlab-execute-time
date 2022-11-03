@@ -28,7 +28,7 @@ export interface IExecuteTimeSettings {
   minTime: number;
   textContrast: string;
   showLiveExecutionTime: boolean;
-  history: boolean;
+  historyCount: number;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -252,15 +252,17 @@ export default class ExecuteTimeWidget extends Widget {
             executionTime
           );
           // Only add a tooltip for all non-displayed execution times.
-          if (this._settings.history && lastExecutionTime) {
+          if (this._settings.historyCount > 0 && lastExecutionTime) {
             let tooltip = executionTimeNode.getAttribute('title');
-            const newTooltipStart = TOOLTIP_PREFIX + '\n' + lastExecutionTime;
-            // We do this to keep the latest value at the start of the list
+            const executionTimes = [lastExecutionTime];
             if (tooltip) {
-              tooltip = tooltip.replace(TOOLTIP_PREFIX, newTooltipStart);
-            } else {
-              tooltip = newTooltipStart;
+              executionTimes.push(
+                ...tooltip.substring(TOOLTIP_PREFIX.length + 1).split('\n')
+              );
+              // JS does the right thing of having empty items if extended
+              executionTimes.length = this._settings.historyCount;
             }
+            tooltip = `${TOOLTIP_PREFIX}\n${executionTimes.join('\n')}`;
             executionTimeNode.setAttribute('title', tooltip);
           }
           executionTimeNode.children[2].textContent = '';
@@ -290,7 +292,7 @@ export default class ExecuteTimeWidget extends Widget {
               const executionTime = getTimeDiff(new Date(), startTime);
 
               executionTimeNode.children[2].textContent = `${executionTime} ${
-                lastRunTime ? `/ ${lastRunTime}` : ''
+                lastRunTime ? `(${lastRunTime})` : ''
               }`;
             }
           }, 100);
@@ -301,7 +303,7 @@ export default class ExecuteTimeWidget extends Widget {
           'data-prev-execution-time'
         );
         if (this._settings.showLiveExecutionTime && lastRunTime) {
-          executionTimeNode.children[2].textContent = `N/A / ${lastRunTime}`;
+          executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
 
         msg = `Execution queued at ${getTimeString(queuedTime)}`;
@@ -339,7 +341,8 @@ export default class ExecuteTimeWidget extends Widget {
       .composite as string;
     this._settings.showLiveExecutionTime = settings.get('showLiveExecutionTime')
       .composite as boolean;
-    this._settings.history = settings.get('history').composite as boolean;
+    this._settings.historyCount = settings.get('historyCount')
+      .composite as number;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -371,6 +374,6 @@ export default class ExecuteTimeWidget extends Widget {
     minTime: 0,
     textContrast: 'high',
     showLiveExecutionTime: true,
-    history: true,
+    historyCount: 5,
   };
 }

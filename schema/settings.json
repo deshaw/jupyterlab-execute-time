@@ -38,14 +38,14 @@
     "showLiveExecutionTime": {
       "type": "boolean",
       "title": "Show Live Execution Time",
-      "description": "Show the current execution time / last execution time as a cell executes.",
+      "description": "Show the current execution time (last execution time) as a cell executes.",
       "default": true
     },
-    "history": {
-      "type": "boolean",
+    "historyCount": {
+      "type": "number",
       "title": "History of Cell Execution Time",
-      "description": "Show all previous execution times since the notebook was opened as a tooltip.",
-      "default": true
+      "description": "Show the historical N previous execution times since the notebook was opened as a tooltip (0 to disabled)",
+      "default": 5
     }
   }
 }
