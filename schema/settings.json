@@ -38,7 +38,7 @@
     "showLiveExecutionTime": {
       "type": "boolean",
       "title": "Show Live Execution Time",
-      "description": "Show the current execution time / last execution time as a cell executes.",
+      "description": "Show the current execution time (last execution time) as a cell executes.",
       "default": true
     },
     "historyCount": {
