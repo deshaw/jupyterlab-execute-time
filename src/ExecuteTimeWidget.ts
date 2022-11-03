@@ -292,7 +292,7 @@ export default class ExecuteTimeWidget extends Widget {
               const executionTime = getTimeDiff(new Date(), startTime);
 
               executionTimeNode.children[2].textContent = `${executionTime} ${
-                lastRunTime ? `/ ${lastRunTime}` : ''
+                lastRunTime ? `(${lastRunTime})` : ''
               }`;
             }
           }, 100);
@@ -303,7 +303,7 @@ export default class ExecuteTimeWidget extends Widget {
           'data-prev-execution-time'
         );
         if (this._settings.showLiveExecutionTime && lastRunTime) {
-          executionTimeNode.children[2].textContent = `N/A / ${lastRunTime}`;
+          executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
 
         msg = `Execution queued at ${getTimeString(queuedTime)}`;
