@@ -1,3 +1,9 @@
+## [2.3.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.0...v2.3.1) (2022-12-27))
+
+### Fixed
+
+- Enable to use jupyter-server2.x.
+
 ## [2.3.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.2.0...v2.3.0) (2022-11-03)
 
 ### Added
