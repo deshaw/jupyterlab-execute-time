@@ -1,12 +1,12 @@
 import { Widget } from '@lumino/widgets';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
-import { NotebookPanel, INotebookTracker } from '@jupyterlab/notebook';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
-  IObservableJSON,
-  IObservableList,
-  IObservableUndoableList,
-} from '@jupyterlab/observables';
+  NotebookPanel,
+  INotebookTracker,
+  type CellList,
+} from '@jupyterlab/notebook';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IObservableList } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
 import { getTimeDiff, getTimeString } from './formatters';
 import { differenceInMilliseconds } from 'date-fns';
@@ -73,7 +73,7 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   updateConnectedCell(
-    cells: IObservableUndoableList<ICellModel>,
+    sender: CellList,
     changed: IObservableList.IChangedArgs<ICellModel>
   ) {
     // While we could look at changed.type, it's easier to just remove all
@@ -86,7 +86,7 @@ export default class ExecuteTimeWidget extends Widget {
     if (!(cellModel.id in this._cellSlotMap)) {
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
-      cellModel.metadata.changed.connect(fn);
+      cellModel.metadataChanged.connect(fn);
     }
     // Always re-render cells.
     // In case there was already metadata: do not highlight on first load.
@@ -94,15 +94,17 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   _deregisterMetadataChanges(cellModel: ICellModel) {
-    const fn = this._cellSlotMap[cellModel.id];
-    if (fn) {
-      cellModel.metadata.changed.disconnect(fn);
-      const codeCell = this._getCodeCell(cellModel);
-      if (codeCell) {
-        this._removeExecuteNode(codeCell);
+    if (cellModel !== undefined) {
+      const fn = this._cellSlotMap[cellModel.id];
+      if (fn) {
+        cellModel.metadataChanged.disconnect(fn);
+        const codeCell = this._getCodeCell(cellModel);
+        if (codeCell) {
+          this._removeExecuteNode(codeCell);
+        }
       }
+      delete this._cellSlotMap[cellModel.id];
     }
-    delete this._cellSlotMap[cellModel.id];
   }
 
   _cellMetadataChanged(cellModel: ICellModel, disableHighlight = false) {
@@ -150,14 +152,15 @@ export default class ExecuteTimeWidget extends Widget {
    * @param cell
    * @private
    */
-  _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
-    const executionMetadata = cell.model.metadata.get(
-      'execution'
-    ) as JSONObject;
+  async _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
+    // Cells don't have inputArea attributes until they are ready; wait for this
+    await cell.ready;
+    const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
+
       const parentNode =
         this._settings.positioning === 'hover'
           ? cell.inputArea.node.parentNode
@@ -359,10 +362,7 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   private _cellSlotMap: {
-    [id: string]: (
-      sender: IObservableJSON,
-      args: IObservableJSON.IChangedArgs
-    ) => void;
+    [id: string]: () => void;
   } = {};
   private _tracker: INotebookTracker;
   private _panel: NotebookPanel;
