@@ -110,3 +110,8 @@ dmypy.json
 
 # OSX files
 .DS_Store
+
+# Berry
+.pnp.cjs
+.pnp.loader.mjs
+.yarn/
