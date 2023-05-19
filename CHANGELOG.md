@@ -1,3 +1,9 @@
+## [3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19))
+
+### Changed
+
+- **Breaking**: Ported to JupyterLab 4.x.
+
 ## [2.3.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.0...v2.3.1) (2022-12-28))
 
 ### Fixed

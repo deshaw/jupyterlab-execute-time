@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-execute-time",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "description": "Display cell timings in Jupyter Lab",
   "keywords": [
     "jupyter",
@@ -48,7 +48,7 @@
     "eslint:check": "eslint . --ext .ts,.tsx",
     "install:extension": "jlpm run build",
     "lint": "npm run prettier && npm run tslint",
-    "prepare": "jlpm run clean && jlpm run build:prod",
+    "prepare": "jlpm run clean && jlpm run build:prod && husky install",
     "prettier": "prettier --write '**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}'",
     "test": "ts-mocha -p tests/tsconfig.json tests/**/*_spec.ts",
     "tslint": "tslint --fix -c tslint.json --project tsconfig.json '**/*{.ts,.tsx}'",
@@ -57,22 +57,17 @@
     "watch:src": "tsc -w --sourceMap"
   },
   "dependencies": {
-    "@jupyterlab/application": "^4.0.0-alpha.22",
-    "@jupyterlab/cells": "^4.0.0-alpha.22",
-    "@jupyterlab/docregistry": "^4.0.0-alpha.22",
-    "@jupyterlab/notebook": "^4.0.0-alpha.22",
-    "@jupyterlab/settingregistry": "^4.0.0-alpha.22",
+    "@jupyterlab/application": "^4.0.0",
+    "@jupyterlab/cells": "^4.0.0",
+    "@jupyterlab/docregistry": "^4.0.0",
+    "@jupyterlab/notebook": "^4.0.0",
+    "@jupyterlab/settingregistry": "^4.0.0",
     "@lumino/coreutils": "^2.0.0-rc.1",
     "@lumino/widgets": "^2.0.0-rc.1",
     "date-fns": "^2.29.3"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint && npm run test"
-    }
-  },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.0.0-alpha.22",
+    "@jupyterlab/builder": "^4.0.0",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "~5.55.0",

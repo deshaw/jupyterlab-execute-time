@@ -110,7 +110,7 @@ export default class ExecuteTimeWidget extends Widget {
   _cellMetadataChanged(cellModel: ICellModel, disableHighlight = false) {
     const codeCell = this._getCodeCell(cellModel);
     if (codeCell) {
-      this._updateCodeCell(codeCell, disableHighlight);
+      this._updateCodeCell(codeCell, disableHighlight).catch(console.error);
     } else {
       if (cellModel.type === 'code') {
         console.error(`Could not find code cell for model: ${cellModel}`);
