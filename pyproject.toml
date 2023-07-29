@@ -2,6 +2,10 @@
 requires = ["jupyter_packaging~=0.10,<2", "jupyterlab~=4.0.0"]
 build-backend = "jupyter_packaging.build_api"
 
+[tool.jupyter-packaging.options]
+skip-if-exists = ["jupyterlab_execute_time/labextension/static/style.js"]
+ensured-targets = ["jupyterlab_execute_time/labextension/static/style.js", "jupyterlab_execute_time/labextension/package.json"]
+
 [tool.jupyter-packaging.builder]
 factory = "jupyter_packaging.npm_builder"
 
