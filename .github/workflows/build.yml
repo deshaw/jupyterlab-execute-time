@@ -26,7 +26,7 @@ jobs:
     - name: Lint the extension
       run: |
         set -eux
-        jlpm
+        jlpm --immutable
         jlpm run eslint:check
     - name: Build the extension
       run: |
