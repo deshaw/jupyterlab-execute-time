@@ -1,4 +1,10 @@
-## [3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19))
+## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02))
+
+### Changed
+
+- Ensure this only installs with Jupyterlab@4
+
+~## [3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19))~
 
 ### Changed
 
