@@ -340,7 +340,6 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   _updateSettings(settings: ISettingRegistry.ISettings) {
-    console.log('settings', settings);
     this._settings.enabled = settings.get('enabled').composite as boolean;
     this._settings.highlight = settings.get('highlight').composite as boolean;
     this._settings.positioning = settings.get('positioning')
