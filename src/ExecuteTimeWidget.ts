@@ -29,6 +29,7 @@ export interface IExecuteTimeSettings {
   textContrast: string;
   showLiveExecutionTime: boolean;
   historyCount: number;
+  dateFormat: string;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -271,7 +272,8 @@ export default class ExecuteTimeWidget extends Widget {
           executionTimeNode.children[2].textContent = '';
 
           msg = `Last executed at ${getTimeString(
-            endTime
+            endTime,
+            this._settings.dateFormat
           )} in ${executionTime}`;
         }
       } else if (startTime) {
@@ -300,7 +302,10 @@ export default class ExecuteTimeWidget extends Widget {
             }
           }, 100);
         }
-        msg = `Execution started at ${getTimeString(startTime)}`;
+        msg = `Execution started at ${getTimeString(
+          startTime,
+          this._settings.dateFormat
+        )}`;
       } else if (queuedTime) {
         const lastRunTime = executionTimeNode.getAttribute(
           'data-prev-execution-time'
@@ -335,6 +340,7 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   _updateSettings(settings: ISettingRegistry.ISettings) {
+    console.log('settings', settings);
     this._settings.enabled = settings.get('enabled').composite as boolean;
     this._settings.highlight = settings.get('highlight').composite as boolean;
     this._settings.positioning = settings.get('positioning')
@@ -346,6 +352,7 @@ export default class ExecuteTimeWidget extends Widget {
       .composite as boolean;
     this._settings.historyCount = settings.get('historyCount')
       .composite as number;
+    this._settings.dateFormat = settings.get('dateFormat').composite as string;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -375,5 +382,6 @@ export default class ExecuteTimeWidget extends Widget {
     textContrast: 'high',
     showLiveExecutionTime: true,
     historyCount: 5,
+    dateFormat: 'yyy-MM-dd HH:mm:ss',
   };
 }

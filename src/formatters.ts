@@ -1,7 +1,10 @@
 import { differenceInMilliseconds, format } from 'date-fns';
 
-export const getTimeString = (date: Date): string => {
-  return format(date, 'yyy-MM-dd HH:mm:ss');
+export const getTimeString = (
+  date: Date,
+  dateFormat = 'yyy-MM-dd HH:mm:ss'
+): string => {
+  return format(date, dateFormat);
 };
 
 export const getTimeDiff = (end: Date, start: Date): string => {

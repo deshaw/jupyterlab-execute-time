@@ -46,6 +46,12 @@
       "title": "History of Cell Execution Time",
       "description": "Show the historical N previous execution times since the notebook was opened as a tooltip (0 to disabled)",
       "default": 5
+    },
+    "dateFormat": {
+      "type": "string",
+      "title": "Date format builder",
+      "description": "Show the formatted date string in the given format.for example \"yyy-MM-dd HH:mm:ss \" results to \"2023-02-28 14:25:57 \". \"dd/MM/YYY HH:mm:ss (O) \" results to \"28/02/2023 14:25:57 (GMT +3)\"",
+      "default": "yyy-MM-dd HH:mm:ss"
     }
   }
 }
