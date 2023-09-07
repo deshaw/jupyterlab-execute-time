@@ -49,7 +49,7 @@
     },
     "dateFormat": {
       "type": "string",
-      "title": "Date format builder",
+      "title": "Date format",
       "description": "Show the formatted date string in the given format. For example \"yyy-MM-dd HH:mm:ss\" results in \"2023-02-28 14:25:57 \", \"dd/MM/YYY HH:mm:ss (O)\" results in \"28/02/2023 14:25:57 (GMT +3)\"",
       "default": "yyy-MM-dd HH:mm:ss"
     }
