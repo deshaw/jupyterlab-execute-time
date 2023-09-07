@@ -4,23 +4,25 @@ import { differenceInMilliseconds, format } from 'date-fns';
  * Checks if a given date format string is valid.
  *
  * This function checks if the input date format string contains only valid characters.
- * Valid characters include: y, G, u, q, Q, M, L, w, d, e, E, c, a, b, B, h, H, k, K, m, s, S, z, O, x, X.
- * Valid characters are based on [date-fns unicode format](https://date-fns.org/v2.30.0/docs/format).
+ * Valid unicode date field characters include: y, G, u, q, Q, M, L, w, d, e, E, c, a, b, B, h, H, k, K, m, s, S, z, O, x, X.
+ * Valid unicade date field characters are based on [date-fns unicode format](https://date-fns.org/docs/format).
  *
  * @param {string} dateFormat - The date format string to validate.
  * @returns {boolean} Returns true if the format is valid.
  * @throws {Error} Throws an error if the format contains invalid characters.
  */
 export const isValidDateFormat = (dateFormat: string) => {
-  const validChars = 'yGuqQMLwdeEcabBhHkKmsSzOxX';
-
-  const invalidChars = Array.from(dateFormat).filter(
-    (char) => !validChars.includes(char)
+  const validCharsRegex = new RegExp(
+    '([^yGuqQMLwdeEcabBhHkKmsSzOxX\\W])',
+    'gm'
   );
 
-  if (invalidChars.length > 0) {
+  const invalidChars = dateFormat.match(validCharsRegex);
+
+  if (invalidChars !== null) {
+    const uniqueInvalidChars = [...new Set(invalidChars)];
     throw new Error(
-      `Invalid characters in date format: ${invalidChars.join(
+      `Invalid characters in date format: ${uniqueInvalidChars.join(
         ', '
       )} . see https://date-fns.org/docs/format for valid characters`
     );
