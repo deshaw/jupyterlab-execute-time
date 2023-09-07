@@ -314,7 +314,10 @@ export default class ExecuteTimeWidget extends Widget {
           executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
 
-        msg = `Execution queued at ${getTimeString(queuedTime)}`;
+        msg = `Execution queued at ${getTimeString(
+          queuedTime,
+          this._settings.dateFormat
+        )}`;
       }
       if (executionTimeNode.textContent !== msg) {
         executionTimeNode.children[0].textContent = msg;
