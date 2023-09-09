@@ -364,7 +364,10 @@ export default class ExecuteTimeWidget extends Widget {
       // fallback to default
       this._settings.dateFormat = 'yyy-MM-dd HH:mm:ss';
       // warn user once
-      showErrorMessage('Invalid date format', formatValidationResult.message);
+      showErrorMessage(
+        'Invalid date format in Execute Time extension setting',
+        formatValidationResult.message
+      );
     }
 
     const cells = this._panel.context.model.cells;
