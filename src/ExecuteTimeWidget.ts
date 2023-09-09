@@ -354,7 +354,19 @@ export default class ExecuteTimeWidget extends Widget {
       .composite as boolean;
     this._settings.historyCount = settings.get('historyCount')
       .composite as number;
-    this._settings.dateFormat = settings.get('dateFormat').composite as string;
+    const dateFormat = settings.get('dateFormat').composite as string;
+    const formatValidationResult = validateDateFormat(dateFormat);
+    if (formatValidationResult.isValid) {
+      this._settings.dateFormat = dateFormat;
+    } else {
+      // fallback to default
+      this._settings.dateFormat = 'yyy-MM-dd HH:mm:ss';
+      // warn user once
+      showErrorMessage(
+        'Invalid date format',
+        formatValidationResult.message
+      );
+    }
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {

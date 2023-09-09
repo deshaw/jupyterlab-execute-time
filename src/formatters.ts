@@ -1,52 +1,37 @@
 import { differenceInMilliseconds, format } from 'date-fns';
 
+export interface IFormatValidationResult {
+  isValid: boolean;
+  message?: string;
+}
 /**
  * Checks if a given date format string is valid.
  *
- * This function checks if the input date format string contains only valid characters.
- * Valid unicode date field characters include: y, G, u, q, Q, M, L, w, d, e, E, c, a, b, B, h, H, k, K, m, s, S, z, O, x, X.
- * Valid unicade date field characters are based on [date-fns unicode format](https://date-fns.org/docs/format).
+ * This function checks if the input date format string is valid.
  *
  * @param {string} dateFormat - The date format string to validate.
- * @returns {boolean} Returns true if the format is valid.
- * @throws {Error} Throws an error if the format contains invalid characters.
+ * @returns {IFormatValidationResult} Returns validation result.
  */
-export const isValidDateFormat = (dateFormat: string) => {
-  const validCharsRegex = new RegExp(
-    '([^yGuqQMLwdeEcabBhHkKmsSzOxX\\W])',
-    'gm'
-  );
-
-  const invalidChars = dateFormat.match(validCharsRegex);
-
-  if (invalidChars !== null) {
-    const uniqueInvalidChars = [...new Set(invalidChars)];
-    throw new Error(
-      `Invalid characters in date format: ${uniqueInvalidChars.join(
-        ', '
-      )} . see https://date-fns.org/docs/format for valid characters`
-    );
+export const validateDateFormat = (dateFormat: string): IFormatValidationResult => {
+  const testDate = new Date();
+  try {
+    format(testDate, dateFormat);
+    return {
+      isValid: true
+    }
+  } catch (error) {
+    return {
+      isValid: false,
+      message: (error as Error).message
+    }
   }
-
-  return true; // The format is valid.
 };
 
 export const getTimeString = (
   date: Date,
   dateFormat = 'yyy-MM-dd HH:mm:ss'
 ): string => {
-  try {
-    // Check if the dateFormat is valid before formatting
-    isValidDateFormat(dateFormat);
-
     return format(date, dateFormat);
-  } catch (error) {
-    if (error instanceof RangeError) {
-      console.error(error.message);
-    } else {
-      throw error; // Re-throw other errors for further handling
-    }
-  }
 };
 
 export const getTimeDiff = (end: Date, start: Date): string => {
