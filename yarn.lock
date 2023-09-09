@@ -4320,6 +4320,7 @@ __metadata:
   resolution: "jupyterlab-execute-time@workspace:."
   dependencies:
     "@jupyterlab/application": ^4.0.0
+    "@jupyterlab/apputils": ^4.0.0
     "@jupyterlab/builder": ^4.0.0
     "@jupyterlab/cells": ^4.0.0
     "@jupyterlab/docregistry": ^4.0.0
