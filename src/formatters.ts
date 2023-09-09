@@ -12,18 +12,20 @@ export interface IFormatValidationResult {
  * @param {string} dateFormat - The date format string to validate.
  * @returns {IFormatValidationResult} Returns validation result.
  */
-export const validateDateFormat = (dateFormat: string): IFormatValidationResult => {
+export const validateDateFormat = (
+  dateFormat: string
+): IFormatValidationResult => {
   const testDate = new Date();
   try {
     format(testDate, dateFormat);
     return {
-      isValid: true
-    }
+      isValid: true,
+    };
   } catch (error) {
     return {
       isValid: false,
-      message: (error as Error).message
-    }
+      message: (error as Error).message,
+    };
   }
 };
 
@@ -31,7 +33,7 @@ export const getTimeString = (
   date: Date,
   dateFormat = 'yyy-MM-dd HH:mm:ss'
 ): string => {
-    return format(date, dateFormat);
+  return format(date, dateFormat);
 };
 
 export const getTimeDiff = (end: Date, start: Date): string => {

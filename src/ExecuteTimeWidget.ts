@@ -8,8 +8,9 @@ import {
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IObservableList } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
-import { getTimeDiff, getTimeString } from './formatters';
+import { getTimeDiff, getTimeString, validateDateFormat } from './formatters';
 import { differenceInMilliseconds } from 'date-fns';
+import { showErrorMessage } from '@jupyterlab/apputils';
 
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
@@ -354,6 +355,7 @@ export default class ExecuteTimeWidget extends Widget {
       .composite as boolean;
     this._settings.historyCount = settings.get('historyCount')
       .composite as number;
+
     const dateFormat = settings.get('dateFormat').composite as string;
     const formatValidationResult = validateDateFormat(dateFormat);
     if (formatValidationResult.isValid) {
@@ -362,10 +364,7 @@ export default class ExecuteTimeWidget extends Widget {
       // fallback to default
       this._settings.dateFormat = 'yyy-MM-dd HH:mm:ss';
       // warn user once
-      showErrorMessage(
-        'Invalid date format',
-        formatValidationResult.message
-      );
+      showErrorMessage('Invalid date format', formatValidationResult.message);
     }
 
     const cells = this._panel.context.model.cells;
