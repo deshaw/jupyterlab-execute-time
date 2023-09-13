@@ -279,7 +279,7 @@ export default class ExecuteTimeWidget extends Widget {
           )} in ${executionTime}`;
           msg = 'Last executed';
           if (this._settings.showDate) {
-            msg += ` at ${getTimeString(endTime)}`;
+            msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
           }
           msg += ` in ${executionTime}`;
         }
