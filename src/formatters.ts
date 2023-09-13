@@ -1,7 +1,39 @@
 import { differenceInMilliseconds, format } from 'date-fns';
 
-export const getTimeString = (date: Date): string => {
-  return format(date, 'yyy-MM-dd HH:mm:ss');
+export interface IFormatValidationResult {
+  isValid: boolean;
+  message?: string;
+}
+/**
+ * Checks if a given date format string is valid.
+ *
+ * This function checks if the input date format string is valid.
+ *
+ * @param {string} dateFormat - The date format string to validate.
+ * @returns {IFormatValidationResult} Returns validation result.
+ */
+export const validateDateFormat = (
+  dateFormat: string
+): IFormatValidationResult => {
+  const testDate = new Date();
+  try {
+    format(testDate, dateFormat);
+    return {
+      isValid: true,
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      message: (error as Error).message,
+    };
+  }
+};
+
+export const getTimeString = (
+  date: Date,
+  dateFormat = 'yyy-MM-dd HH:mm:ss'
+): string => {
+  return format(date, dateFormat);
 };
 
 export const getTimeDiff = (end: Date, start: Date): string => {

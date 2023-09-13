@@ -8,8 +8,9 @@ import {
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IObservableList } from '@jupyterlab/observables';
 import { Cell, CodeCell, ICellModel } from '@jupyterlab/cells';
-import { getTimeDiff, getTimeString } from './formatters';
+import { getTimeDiff, getTimeString, validateDateFormat } from './formatters';
 import { differenceInMilliseconds } from 'date-fns';
+import { showErrorMessage } from '@jupyterlab/apputils';
 
 export const PLUGIN_NAME = 'jupyterlab-execute-time';
 const EXECUTE_TIME_CLASS = 'execute-time';
@@ -29,6 +30,7 @@ export interface IExecuteTimeSettings {
   textContrast: string;
   showLiveExecutionTime: boolean;
   historyCount: number;
+  dateFormat: string;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -271,7 +273,8 @@ export default class ExecuteTimeWidget extends Widget {
           executionTimeNode.children[2].textContent = '';
 
           msg = `Last executed at ${getTimeString(
-            endTime
+            endTime,
+            this._settings.dateFormat
           )} in ${executionTime}`;
         }
       } else if (startTime) {
@@ -300,7 +303,10 @@ export default class ExecuteTimeWidget extends Widget {
             }
           }, 100);
         }
-        msg = `Execution started at ${getTimeString(startTime)}`;
+        msg = `Execution started at ${getTimeString(
+          startTime,
+          this._settings.dateFormat
+        )}`;
       } else if (queuedTime) {
         const lastRunTime = executionTimeNode.getAttribute(
           'data-prev-execution-time'
@@ -309,7 +315,10 @@ export default class ExecuteTimeWidget extends Widget {
           executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
 
-        msg = `Execution queued at ${getTimeString(queuedTime)}`;
+        msg = `Execution queued at ${getTimeString(
+          queuedTime,
+          this._settings.dateFormat
+        )}`;
       }
       if (executionTimeNode.textContent !== msg) {
         executionTimeNode.children[0].textContent = msg;
@@ -347,6 +356,20 @@ export default class ExecuteTimeWidget extends Widget {
     this._settings.historyCount = settings.get('historyCount')
       .composite as number;
 
+    const dateFormat = settings.get('dateFormat').composite as string;
+    const formatValidationResult = validateDateFormat(dateFormat);
+    if (formatValidationResult.isValid) {
+      this._settings.dateFormat = dateFormat;
+    } else {
+      // fallback to default
+      this._settings.dateFormat = 'yyy-MM-dd HH:mm:ss';
+      // warn user once
+      showErrorMessage(
+        'Invalid date format in Execute Time extension setting',
+        formatValidationResult.message
+      );
+    }
+
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
       cells.changed.connect(this.updateConnectedCell);
@@ -375,5 +398,6 @@ export default class ExecuteTimeWidget extends Widget {
     textContrast: 'high',
     showLiveExecutionTime: true,
     historyCount: 5,
+    dateFormat: 'yyy-MM-dd HH:mm:ss',
   };
 }
