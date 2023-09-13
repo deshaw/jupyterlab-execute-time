@@ -44,7 +44,7 @@
     "showDate": {
       "type": "boolean",
       "title": "Show Last Execution Date",
-      "description": "Show the date in browser timezone when the cell was last executed.",
+      "description": "Show the date of last cell execution.",
       "default": true
     },
     "historyCount": {
