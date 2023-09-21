@@ -41,6 +41,12 @@
       "description": "Show the current execution time (last execution time) as a cell executes.",
       "default": true
     },
+    "showDate": {
+      "type": "boolean",
+      "title": "Show Last Execution Date",
+      "description": "Show the date of last cell execution.",
+      "default": true
+    },
     "historyCount": {
       "type": "number",
       "title": "History of Cell Execution Time",

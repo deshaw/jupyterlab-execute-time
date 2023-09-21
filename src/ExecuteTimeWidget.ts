@@ -29,6 +29,7 @@ export interface IExecuteTimeSettings {
   minTime: number;
   textContrast: string;
   showLiveExecutionTime: boolean;
+  showDate: boolean;
   historyCount: number;
   dateFormat: string;
 }
@@ -276,6 +277,11 @@ export default class ExecuteTimeWidget extends Widget {
             endTime,
             this._settings.dateFormat
           )} in ${executionTime}`;
+          msg = 'Last executed';
+          if (this._settings.showDate) {
+            msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
+          }
+          msg += ` in ${executionTime}`;
         }
       } else if (startTime) {
         if (this._settings.showLiveExecutionTime) {
@@ -353,6 +359,7 @@ export default class ExecuteTimeWidget extends Widget {
       .composite as string;
     this._settings.showLiveExecutionTime = settings.get('showLiveExecutionTime')
       .composite as boolean;
+    this._settings.showDate = settings.get('showDate').composite as boolean;
     this._settings.historyCount = settings.get('historyCount')
       .composite as number;
 
@@ -397,6 +404,7 @@ export default class ExecuteTimeWidget extends Widget {
     minTime: 0,
     textContrast: 'high',
     showLiveExecutionTime: true,
+    showDate: true,
     historyCount: 5,
     dateFormat: 'yyy-MM-dd HH:mm:ss',
   };
