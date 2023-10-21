@@ -1,3 +1,10 @@
+## [3.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.1...v3.1.0) (2023-10-23))
+
+### Added
+
+- Make display of last execution date optional [#94](https://github.com/deshaw/jupyterlab-execute-time/pull/94)
+- Enable defining custom date format [#93](https://github.com/deshaw/jupyterlab-execute-time/pull/93)
+
 ## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02))
 
 ### Changed
