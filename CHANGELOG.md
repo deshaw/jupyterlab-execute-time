@@ -1,23 +1,23 @@
-## [3.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.1...v3.1.0) (2023-10-23))
+## [3.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.1...v3.1.0) (2023-10-23)
 
 ### Added
 
 - Make display of last execution date optional [#94](https://github.com/deshaw/jupyterlab-execute-time/pull/94)
 - Enable defining custom date format [#93](https://github.com/deshaw/jupyterlab-execute-time/pull/93)
 
-## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02))
+## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02)
 
 ### Changed
 
 - Ensure this only installs with Jupyterlab@4
 
-~## [3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19))~
+## ~[3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19)~
 
 ### Changed
 
 - **Breaking**: Ported to JupyterLab 4.x.
 
-## [2.3.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.0...v2.3.1) (2022-12-28))
+## [2.3.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.0...v2.3.1) (2022-12-28)
 
 ### Fixed
 
