@@ -160,6 +160,20 @@ export default class ExecuteTimeWidget extends Widget {
     await cell.ready;
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
+      // Wait until the cell is in viewport before querying for the node,
+      // as otherwise it would not be found as contents are detached from DOM.
+      if (!cell.inViewport) {
+        // TODO: cancel the update if another update was scheduled since.
+        await new Promise<void>((resolved) => {
+          const handler = (_emitter: Cell<ICellModel>, attached: boolean) => {
+            if (attached) {
+              resolved();
+              cell.inViewportChanged.disconnect(handler);
+            }
+          };
+          cell.inViewportChanged.connect(handler);
+        });
+      }
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
