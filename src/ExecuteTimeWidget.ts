@@ -156,24 +156,21 @@ export default class ExecuteTimeWidget extends Widget {
    * @private
    */
   async _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
-    // Cells don't have inputArea attributes until they are ready; wait for this
+    // First update and store current update number.
+    const updateNumber = this._increaseUpdateCounter(cell);
+    // Cells don't have inputArea attributes until they are ready; wait for this.
+    // Cells can be in the viewport but not yet ready when the `defer` mode is used.
     await cell.ready;
+    // Wait until the cell is in the viewport before querying for the node,
+    // as otherwise it would not be found as contents are detached from DOM.
+    if (!cell.inViewport) {
+      const shouldContinue = await this._cellInViewport(cell, updateNumber);
+      if (!shouldContinue) {
+        return;
+      }
+    }
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
-      // Wait until the cell is in viewport before querying for the node,
-      // as otherwise it would not be found as contents are detached from DOM.
-      if (!cell.inViewport) {
-        // TODO: cancel the update if another update was scheduled since.
-        await new Promise<void>((resolved) => {
-          const handler = (_emitter: Cell<ICellModel>, attached: boolean) => {
-            if (attached) {
-              resolved();
-              cell.inViewportChanged.disconnect(handler);
-            }
-          };
-          cell.inViewportChanged.connect(handler);
-        });
-      }
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
@@ -405,6 +402,44 @@ export default class ExecuteTimeWidget extends Widget {
     }
   }
 
+  /**
+   * Generate a promise which resolves to `true` when cell enters the viewport,
+   * or to `false` when an update newer than given `updateNumber` arrives.
+   */
+  private _cellInViewport(
+    cell: CodeCell,
+    updateNumber: number
+  ): Promise<boolean> {
+    return new Promise<boolean>((resolved) => {
+      const handler = (_emitter: Cell<ICellModel>, attached: boolean) => {
+        const currentNumber = this._updateCounter.get(cell);
+        if (updateNumber !== currentNumber) {
+          cell.inViewportChanged.disconnect(handler);
+          return resolved(false);
+        }
+        if (attached) {
+          cell.inViewportChanged.disconnect(handler);
+          return resolved(true);
+        }
+      };
+      cell.inViewportChanged.connect(handler);
+    });
+  }
+
+  /**
+   * Increase counter of of updates ever scheduled for a given `cell`.
+   * Returns the current counter value for the given `cell`.
+   */
+  private _increaseUpdateCounter(cell: CodeCell): number {
+    const newValue = (this._updateCounter.get(cell) ?? 0) + 1;
+    this._updateCounter.set(cell, newValue);
+    return newValue;
+  }
+
+  /**
+   * The counter of of updates ever scheduled for each existing cell.
+   */
+  private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
   private _cellSlotMap: {
     [id: string]: () => void;
   } = {};
