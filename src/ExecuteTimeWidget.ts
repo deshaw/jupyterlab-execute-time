@@ -427,7 +427,7 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   /**
-   * Increase counter of of updates ever scheduled for a given `cell`.
+   * Increase counter of updates ever scheduled for a given `cell`.
    * Returns the current counter value for the given `cell`.
    */
   private _increaseUpdateCounter(cell: CodeCell): number {
@@ -437,7 +437,7 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   /**
-   * The counter of of updates ever scheduled for each existing cell.
+   * The counter of updates ever scheduled for each existing cell.
    */
   private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
   private _cellSlotMap: {
