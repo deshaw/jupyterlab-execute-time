@@ -6,6 +6,10 @@
 - Enable defining custom date format [#93](https://github.com/deshaw/jupyterlab-execute-time/pull/93)
 - Support execution failure timing information (in JupyterLab 4.1+) [#100](https://github.com/deshaw/jupyterlab-execute-time/pull/100)
 
+### Fixed
+
+- Font size of the execute time indicator [#103](https://github.com/deshaw/jupyterlab-execute-time/pull/103)
+
 ## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02)
 
 ### Changed
