@@ -51,8 +51,8 @@ export default class ExecuteTimeWidget extends Widget {
         this._updateSettings(settings);
         settings.changed.connect(this._updateSettings.bind(this));
 
-        // If the plugin is enabled, force recoding of timing
-        // We only do this once (not on every settings update) in case the user tries to trun it off
+        // If the plugin is enabled, force recording of timing
+        // We only do this once (not on every settings update) in case the user tries to turn it off
         if (settings.get('enabled').composite) {
           this._settingRegistry
             .load('@jupyterlab/notebook-extension:tracker')
@@ -227,9 +227,9 @@ export default class ExecuteTimeWidget extends Widget {
       // Using started is more accurate, but we don't get this until after the cell has finished executing
       const startTime = startTimeStr ? new Date(startTimeStr) : null;
       // This is the time the kernel is done processing and starts replying
-      const endTimeStr = executionMetadata['shell.execute_reply'] as
-        | string
-        | null;
+      const failed = executionMetadata['execution_failed'];
+      const endTimeStr = (executionMetadata['shell.execute_reply'] ??
+        failed) as string | null;
       const endTime = endTimeStr ? new Date(endTimeStr) : null;
       // shell.execute_reply can be one of:  One of: 'ok' OR 'error' OR 'aborted'
       // We want to remove the cases where it's not 'ok', but that's not in the metadata
@@ -273,11 +273,7 @@ export default class ExecuteTimeWidget extends Widget {
           }
           executionTimeNode.children[2].textContent = '';
 
-          msg = `Last executed at ${getTimeString(
-            endTime,
-            this._settings.dateFormat
-          )} in ${executionTime}`;
-          msg = 'Last executed';
+          msg = failed ? 'Failed' : 'Last executed';
           if (this._settings.showDate) {
             msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
           }
@@ -297,6 +293,15 @@ export default class ExecuteTimeWidget extends Widget {
               clearInterval(workingTimer);
               return;
             }
+
+            const executionMetadata = cell.model.getMetadata(
+              'execution'
+            ) as JSONObject;
+            if (executionMetadata['execution_failed']) {
+              clearInterval(workingTimer);
+              return this._updateCodeCell(cell, disableHighlight);
+            }
+
             if (
               this._settings.minTime <=
               differenceInMilliseconds(new Date(), startTime) / 1000.0
@@ -371,7 +376,7 @@ export default class ExecuteTimeWidget extends Widget {
       // fallback to default
       this._settings.dateFormat = 'yyy-MM-dd HH:mm:ss';
       // warn user once
-      showErrorMessage(
+      void showErrorMessage(
         'Invalid date format in Execute Time extension setting',
         formatValidationResult.message
       );
