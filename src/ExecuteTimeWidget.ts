@@ -411,18 +411,34 @@ export default class ExecuteTimeWidget extends Widget {
     updateNumber: number
   ): Promise<boolean> {
     return new Promise<boolean>((resolved) => {
+      const clearHandlers = () => {
+        cell.inViewportChanged.disconnect(handler);
+        cell.disposed.disconnect(disposedHandler);
+        this._panel.disposed.disconnect(disposedHandler);
+      };
       const handler = (_emitter: Cell<ICellModel>, attached: boolean) => {
         const currentNumber = this._updateCounter.get(cell);
         if (updateNumber !== currentNumber) {
-          cell.inViewportChanged.disconnect(handler);
+          clearHandlers();
           return resolved(false);
         }
         if (attached) {
-          cell.inViewportChanged.disconnect(handler);
+          clearHandlers();
           return resolved(true);
         }
       };
+      const disposedHandler = () => {
+        // Disconnect handlers and resolve promise on cell/notebook disposal.
+        clearHandlers();
+        return resolved(false);
+      };
       cell.inViewportChanged.connect(handler);
+      // Listen to `dispose` signal of individual cells to clear promise
+      // when cells get deleted before entering the viewport (ctrl + a, dd).
+      cell.disposed.connect(disposedHandler);
+      // Listen to notebook too because the `disposed` signal of individual
+      // cells is not fired when closing the entire notebook.
+      this._panel.disposed.connect(disposedHandler);
     });
   }
 
