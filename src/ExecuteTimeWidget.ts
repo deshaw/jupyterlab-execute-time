@@ -156,8 +156,19 @@ export default class ExecuteTimeWidget extends Widget {
    * @private
    */
   async _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
-    // Cells don't have inputArea attributes until they are ready; wait for this
+    // First update and store current update number.
+    const updateNumber = this._increaseUpdateCounter(cell);
+    // Cells don't have inputArea attributes until they are ready; wait for this.
+    // Cells can be in the viewport but not yet ready when the `defer` mode is used.
     await cell.ready;
+    // Wait until the cell is in the viewport before querying for the node,
+    // as otherwise it would not be found as contents are detached from DOM.
+    if (!cell.inViewport) {
+      const shouldContinue = await this._cellInViewport(cell, updateNumber);
+      if (!shouldContinue) {
+        return;
+      }
+    }
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
@@ -396,6 +407,60 @@ export default class ExecuteTimeWidget extends Widget {
     }
   }
 
+  /**
+   * Generate a promise which resolves to `true` when cell enters the viewport,
+   * or to `false` when an update newer than given `updateNumber` arrives.
+   */
+  private _cellInViewport(
+    cell: CodeCell,
+    updateNumber: number
+  ): Promise<boolean> {
+    return new Promise<boolean>((resolved) => {
+      const clearHandlers = () => {
+        cell.inViewportChanged.disconnect(handler);
+        cell.disposed.disconnect(disposedHandler);
+        this._panel.disposed.disconnect(disposedHandler);
+      };
+      const handler = (_emitter: Cell<ICellModel>, attached: boolean) => {
+        const currentNumber = this._updateCounter.get(cell);
+        if (updateNumber !== currentNumber) {
+          clearHandlers();
+          return resolved(false);
+        }
+        if (attached) {
+          clearHandlers();
+          return resolved(true);
+        }
+      };
+      const disposedHandler = () => {
+        // Disconnect handlers and resolve promise on cell/notebook disposal.
+        clearHandlers();
+        return resolved(false);
+      };
+      cell.inViewportChanged.connect(handler);
+      // Listen to `dispose` signal of individual cells to clear promise
+      // when cells get deleted before entering the viewport (ctrl + a, dd).
+      cell.disposed.connect(disposedHandler);
+      // Listen to notebook too because the `disposed` signal of individual
+      // cells is not fired when closing the entire notebook.
+      this._panel.disposed.connect(disposedHandler);
+    });
+  }
+
+  /**
+   * Increase counter of updates ever scheduled for a given `cell`.
+   * Returns the current counter value for the given `cell`.
+   */
+  private _increaseUpdateCounter(cell: CodeCell): number {
+    const newValue = (this._updateCounter.get(cell) ?? 0) + 1;
+    this._updateCounter.set(cell, newValue);
+    return newValue;
+  }
+
+  /**
+   * The counter of updates ever scheduled for each existing cell.
+   */
+  private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
   private _cellSlotMap: {
     [id: string]: () => void;
   } = {};

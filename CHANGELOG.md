@@ -10,6 +10,10 @@
 
 - Font size of the execute time indicator [#103](https://github.com/deshaw/jupyterlab-execute-time/pull/103)
 
+### Fixed
+
+- Fix node attachment issue with windowed notebook [#102](https://github.com/deshaw/jupyterlab-execute-time/pull/102)
+
 ## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02)
 
 ### Changed
