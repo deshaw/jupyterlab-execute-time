@@ -37,14 +37,13 @@ export async function acceptDialog(page: Page, title: string) {
 /**
  * Take a screenshot masking digits in the execute-time widget.
  * The node will be temporarily cloned to allow taking a masked
- * snapshot while the live execution timer is kicking.
+ * snapshot while the live execution timer is ticking.
  */
 export async function maskedScreenshot(
   widget: ElementHandle<HTMLElement | SVGElement>
 ) {
   // Clone the widget node and mask the digits.
   const masked = (await widget.evaluateHandle(async (original) => {
-    console.log((original as HTMLElement).innerText);
     const node = original.cloneNode(true) as HTMLElement;
     node.querySelectorAll('span').forEach((span) => {
       span.innerText = span.innerText.replace(/[0-9]/g, 'X');
@@ -55,7 +54,6 @@ export async function maskedScreenshot(
     node.style.zIndex = '1000';
     node.style.position = 'absolute';
     document.body.appendChild(node);
-    node.id = 'clone';
     return node;
   })) as ElementHandle<HTMLElement>;
   const blob = await masked.screenshot({ timeout: 1000 });
