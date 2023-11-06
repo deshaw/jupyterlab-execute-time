@@ -9,10 +9,11 @@
 ### Fixed
 
 - Font size of the execute time indicator [#103](https://github.com/deshaw/jupyterlab-execute-time/pull/103)
-
-### Fixed
-
 - Fix node attachment issue with windowed notebook [#102](https://github.com/deshaw/jupyterlab-execute-time/pull/102)
+
+### Maintenance
+
+- Added UI/visual regression tests [#105](https://github.com/deshaw/jupyterlab-execute-time/pull/105)
 
 ## [3.0.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.0...v3.0.1) (2023-08-02)
 
