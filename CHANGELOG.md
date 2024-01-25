@@ -1,3 +1,9 @@
+## 3.1.1 (unreleased)
+
+### Fixed
+
+- Fix execute time not showing up after moving a cell [#109](https://github.com/deshaw/jupyterlab-execute-time/pull/109)
+
 ## [3.1.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.0.1...v3.1.0) (2023-11-06)
 
 ### Added
