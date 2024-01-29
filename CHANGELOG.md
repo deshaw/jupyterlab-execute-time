@@ -1,4 +1,4 @@
-## 3.1.1 (unreleased)
+## [3.1.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.0...v3.1.1) (2024-01-29)
 
 ### Fixed
 
