@@ -75,21 +75,56 @@ export default class ExecuteTimeWidget extends Widget {
     );
   }
 
+  /**
+   * Handle `CellList.changed` signal.
+   */
   updateConnectedCell(
     sender: CellList,
     changed: IObservableList.IChangedArgs<ICellModel>
   ) {
-    // While we could look at changed.type, it's easier to just remove all
-    // oldValues and add back all new values
+    // When a cell is moved it's model gets re-created so we need to update
+    // the `metadataChanged` listeners.
+
+    // When cells are moved around the `CellList.changed` signal is first
+    // emitted with "add" type and the cell model information and then
+    // with "remove" type but lacking the old model (it is `undefined`).
+    // This causes a problem for the sequence of registering and deregistering
+    // listeners for the `metadataChanged` signal (register can be called when
+    // the cell was no yet removed from `this._cellSlotMap`, and deregister
+    // could be called with `undefined` value hence unable to remove it).
+    // There are two possible solutions:
+    // - (a) go over the list of cells and compare it with `cellSlotMap` (slow)
+    // - (b) deregister the cell model as it gets disposed just before
+    //      `CellList.changed` signals are emitted; we can do this by
+    //       listening to the `ICellModel.sharedModel.disposed` signal.
+    // The (b) solution is implemented in `_registerMetadataChanges` method.
+
+    // Reference:
+    // https://github.com/jupyterlab/jupyterlab/blob/4.0.x/packages/notebook/src/celllist.ts#L131-L159
+
     changed.oldValues.forEach(this._deregisterMetadataChanges.bind(this));
     changed.newValues.forEach(this._registerMetadataChanges.bind(this));
   }
 
   _registerMetadataChanges(cellModel: ICellModel) {
     if (!(cellModel.id in this._cellSlotMap)) {
+      // Register signal handler with `cellModel` stored in closure.
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
       cellModel.metadataChanged.connect(fn);
+
+      // Copy cell model identifier and store a reference to `metadataChanged`
+      // signal to keep them available even during cell model disposal.
+      const id = cellModel.id;
+      const metadataChanged = cellModel.metadataChanged;
+
+      // Register a model disposal handler on the underlying shared model,
+      // see the explanation in `updateConnectedCell()` method.
+      const deregisterOnDisposal = () => {
+        this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
+        cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal);
+      };
+      cellModel.sharedModel.disposed.connect(deregisterOnDisposal);
     }
     // Always re-render cells.
     // In case there was already metadata: do not highlight on first load.
