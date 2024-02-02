@@ -11,5 +11,5 @@ module.exports = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
-  retries: process.env.CI ? 1 : 0
+  retries: process.env.CI ? 1 : 0,
 };
