@@ -343,7 +343,8 @@ export default class ExecuteTimeWidget extends Widget {
             const executionMetadata = cell.model.getMetadata(
               'execution'
             ) as JSONObject;
-            if (executionMetadata['execution_failed']) {
+            if (!executionMetadata || executionMetadata['execution_failed']) {
+              // (if cell got re-scheduled the metadata will be empty too)
               clearInterval(workingTimer);
               return this._updateCodeCell(cell, disableHighlight);
             }
