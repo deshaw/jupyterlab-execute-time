@@ -42,7 +42,7 @@ test.describe('Timing outcomes', () => {
   });
 
   // Skipped for now as this requires JupyterLab 4.1.
-  test.skip('"Failed" state', async ({ page }) => {
+  test('"Failed" state', async ({ page }) => {
     const cell = await page.notebook.getCell(6);
 
     // Execute cell manually without waiting for it to complete

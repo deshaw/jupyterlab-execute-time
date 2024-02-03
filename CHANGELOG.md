@@ -1,3 +1,9 @@
+## [3.1.2](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.0...v3.1.2) (unreleased)
+
+### Fixed
+
+- Fix fluctuation of execute time when re-executing a cell [#112](https://github.com/deshaw/jupyterlab-execute-time/pull/112)
+
 ## [3.1.1](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.0...v3.1.1) (2024-01-29)
 
 ### Fixed

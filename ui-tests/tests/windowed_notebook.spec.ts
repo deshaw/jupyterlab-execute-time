@@ -28,7 +28,7 @@ test.describe('Windowed notebook', () => {
     expect(await widgetLocator.isHidden()).toBeTruthy();
     // Scroll to the 100th cell
     await page.notebook.getCell(100);
-    // The widget should not be shown
+    // The widget should be shown
     expect(await widgetLocator.isHidden()).toBeFalsy();
     // The widget should be in "executed" state
     expect(await widgetLocator.textContent()).toContain('Last executed at');

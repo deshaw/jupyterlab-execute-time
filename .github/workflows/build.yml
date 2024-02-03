@@ -108,7 +108,7 @@ jobs:
     - name: Install the extension
       run: |
         set -eux
-        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_execute_time*.whl
+        python -m pip install "jupyterlab>=4.1.0rc1,<5" jupyterlab_execute_time*.whl
 
     - name: Install dependencies
       working-directory: ui-tests
