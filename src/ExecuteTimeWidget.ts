@@ -32,6 +32,7 @@ export interface IExecuteTimeSettings {
   showDate: boolean;
   historyCount: number;
   dateFormat: string;
+  showExecutionsPerSecond: boolean;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -290,11 +291,13 @@ export default class ExecuteTimeWidget extends Widget {
       if (isLikelyAborted) {
         msg = '';
       } else if (endTime) {
-        if (
-          this._settings.minTime <=
-          differenceInMilliseconds(endTime, startTime) / 1000.0
-        ) {
+        const executionTimeMillis = differenceInMilliseconds(
+          endTime,
+          startTime
+        );
+        if (this._settings.minTime <= executionTimeMillis) {
           const executionTime = getTimeDiff(endTime, startTime);
+          const executionsPerSecond = 1000.0 / executionTimeMillis;
           const lastExecutionTime = executionTimeNode.getAttribute(
             PREV_DATA_EXECUTION_TIME_ATTR
           );
@@ -324,6 +327,9 @@ export default class ExecuteTimeWidget extends Widget {
             msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
           }
           msg += ` in ${executionTime}`;
+          if (this._settings.showExecutionsPerSecond) {
+            msg += ` (${executionsPerSecond.toFixed(2)} executions/s)`;
+          }
         }
       } else if (startTime) {
         if (this._settings.showLiveExecutionTime) {
@@ -429,6 +435,10 @@ export default class ExecuteTimeWidget extends Widget {
       );
     }
 
+    this._settings.showExecutionsPerSecond = settings.get(
+      'showExecutionsPerSecond'
+    ).composite as boolean;
+
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
       cells.changed.connect(this.updateConnectedCell);
@@ -513,5 +523,6 @@ export default class ExecuteTimeWidget extends Widget {
     showDate: true,
     historyCount: 5,
     dateFormat: 'yyy-MM-dd HH:mm:ss',
+    showExecutionsPerSecond: false,
   };
 }
