@@ -62,8 +62,8 @@
     },
     "showExecutionsPerSecond": {
       "type": "boolean",
-      "title": "Show Executions Per Second",
-      "description": "Show the executions per second calculated from the last execution time.",
+      "title": "Show Cell Executions Per Second (executions/s)",
+      "description": "Show the cell executions per second calculated from the last cell execution time.",
       "default": false
     }
   }
