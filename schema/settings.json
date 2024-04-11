@@ -60,10 +60,10 @@
       "default": "yyy-MM-dd HH:mm:ss",
       "pattern": "[yGuqQMLwdeEcabBhHkKmsSzOxX\\W].*"
     },
-    "showExecutionsPerSecond": {
+    "showOutputsPerSecond": {
       "type": "boolean",
-      "title": "Show Cell Executions Per Second (executions/s)",
-      "description": "Show the cell executions per second calculated from the last cell execution time.",
+      "title": "Show Outputs Per Second (outputs/s)",
+      "description": "Show the outputs per second calculated from the last cell execution time and number of outputs.",
       "default": false
     }
   }

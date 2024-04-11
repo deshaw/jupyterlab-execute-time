@@ -32,7 +32,7 @@ export interface IExecuteTimeSettings {
   showDate: boolean;
   historyCount: number;
   dateFormat: string;
-  showExecutionsPerSecond: boolean;
+  showOutputsPerSecond: boolean;
 }
 
 export default class ExecuteTimeWidget extends Widget {
@@ -327,8 +327,12 @@ export default class ExecuteTimeWidget extends Widget {
             msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
           }
           msg += ` in ${executionTime}`;
-          if (this._settings.showExecutionsPerSecond) {
-            msg += ` (${executionsPerSecond.toFixed(2)} executions/s)`;
+
+          const numberOfOutputs = cell.model.outputs.length;
+          if (this._settings.showOutputsPerSecond && numberOfOutputs > 0) {
+            const outputsPerSecond = executionsPerSecond / numberOfOutputs;
+            msg += ` and generated ${numberOfOutputs} output(s)`;
+            msg += ` (${outputsPerSecond.toFixed(2)} outputs/s)`;
           }
         }
       } else if (startTime) {
@@ -435,9 +439,8 @@ export default class ExecuteTimeWidget extends Widget {
       );
     }
 
-    this._settings.showExecutionsPerSecond = settings.get(
-      'showExecutionsPerSecond'
-    ).composite as boolean;
+    this._settings.showOutputsPerSecond = settings.get('showOutputsPerSecond')
+      .composite as boolean;
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
@@ -523,6 +526,6 @@ export default class ExecuteTimeWidget extends Widget {
     showDate: true,
     historyCount: 5,
     dateFormat: 'yyy-MM-dd HH:mm:ss',
-    showExecutionsPerSecond: false,
+    showOutputsPerSecond: false,
   };
 }
