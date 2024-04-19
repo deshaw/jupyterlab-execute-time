@@ -331,7 +331,7 @@ export default class ExecuteTimeWidget extends Widget {
           const numberOfOutputs = cell.model.outputs.length;
           if (this._settings.showOutputsPerSecond && numberOfOutputs > 0) {
             const outputsPerSecond = executionsPerSecond / numberOfOutputs;
-            msg += ` and generated ${numberOfOutputs} output(s)`;
+            msg += ` displaying ${numberOfOutputs} output${numberOfOutputs === 1 ? '' : 's'}`;
             msg += ` (${outputsPerSecond.toFixed(2)} outputs/s)`;
           }
         }
