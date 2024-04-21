@@ -62,7 +62,7 @@
     },
     "showOutputsPerSecond": {
       "type": "boolean",
-      "title": "Show Outputs Per Second (outputs/s)",
+      "title": "Show Outputs Per Second",
       "description": "Show the outputs per second calculated from the last cell execution time and number of outputs.",
       "default": false
     }
