@@ -22,7 +22,7 @@ test.describe('Timing outcomes with ', () => {
     const cell = await page.notebook.getCell(2);
 
     // Execute cell and wait for it to complete
-    await page.notebook.runCell(4);
+    await page.notebook.runCell(2);
 
     const widget = await cell.waitForSelector('.execute-time');
     expect(await widget.textContent()).toContain('Last executed at');
