@@ -295,7 +295,7 @@ export default class ExecuteTimeWidget extends Widget {
           endTime,
           startTime
         );
-        if (this._settings.minTime <= executionTimeMillis) {
+        if (this._settings.minTime <= executionTimeMillis / 1000.0) {
           const executionTime = getTimeDiff(endTime, startTime);
           const executionsPerSecond = 1000.0 / executionTimeMillis;
           const lastExecutionTime = executionTimeNode.getAttribute(
