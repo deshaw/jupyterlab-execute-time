@@ -1,3 +1,9 @@
+## [3.2.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.2...v3.2.0) (unreleased)
+
+### Added
+
+- Add an option to show the cell outputs per second [#116](https://github.com/deshaw/jupyterlab-execute-time/pull/116)
+
 ## [3.1.2](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.0...v3.1.2) (2024-02-14)
 
 ### Fixed
