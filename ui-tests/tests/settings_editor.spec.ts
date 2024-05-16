@@ -9,6 +9,7 @@ test.describe('Settings Editor', () => {
       '.jp-PluginList .jp-PluginList-entry >> text="Execute Time"'
     );
 
+    await plugin.waitFor();
     expect(plugin).toHaveCount(1);
   });
 });
