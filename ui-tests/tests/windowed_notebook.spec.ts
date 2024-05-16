@@ -25,9 +25,10 @@ test.describe('Windowed notebook', () => {
     await page.notebook.selectCells(0);
     // Reload JupyterLab page
     await (page as any as JupyterLabPage).reload({ waitForIsReady: false });
-    //await page.reload({ waitForIsReady: false });
     await page.notebook.openByPath(`${tmpPath}/${fileName}`);
     await page.notebook.activate(fileName);
+    // Wait for the notebook state to settle
+    await page.waitForTimeout(100);
     // Check that we are in the first cell
     expect(await page.notebook.isCellSelected(0)).toBe(true);
     // Check that only a fraction of cells have the widget
