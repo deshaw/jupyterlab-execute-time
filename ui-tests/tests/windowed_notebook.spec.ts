@@ -18,7 +18,14 @@ test.describe('Windowed notebook', () => {
   test.afterEach(cleanup);
 
   test('Node attaches after scrolling into view', async ({ page }) => {
+    // Run all cells; this will scroll as to the end
     await page.notebook.run();
+    // Select first cell
+    await page.notebook.selectCells(0);
+    // Reload JupyterLab page
+    await page.goto();
+    // Check that we are in the first cell
+    expect(await page.notebook.isCellSelected(0)).toBe(true);
     // Check that only a fraction of cells have the widget
     expect(await page.locator('.execute-time').count()).toBeLessThan(50);
     // Get the 100th cells locator without scrolling
