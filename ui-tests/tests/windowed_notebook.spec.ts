@@ -1,10 +1,11 @@
-import { expect, galata, test } from '@jupyterlab/galata';
+import { expect, galata, test, JupyterLabPage } from '@jupyterlab/galata';
 import { openNotebook, acceptDialog, cleanup } from './utils';
 
 const SETTINGS_ID = 'jupyterlab-execute-time:settings';
 const NOTEBOOK_ID = '@jupyterlab/notebook-extension:tracker';
 
 test.describe('Windowed notebook', () => {
+  const fileName = '100_code_cells.ipynb';
   test.use({
     mockSettings: {
       ...galata.DEFAULT_SETTINGS,
@@ -12,18 +13,21 @@ test.describe('Windowed notebook', () => {
         ...galata.DEFAULT_SETTINGS[NOTEBOOK_ID],
         windowingMode: 'full',
       },
-    },
+    }
   });
-  test.beforeEach(openNotebook('100_code_cells.ipynb'));
+  test.beforeEach(openNotebook(fileName));
   test.afterEach(cleanup);
 
-  test('Node attaches after scrolling into view', async ({ page }) => {
+  test('Node attaches after scrolling into view', async ({ page, tmpPath }) => {
     // Run all cells; this will scroll as to the end
     await page.notebook.run();
     // Select first cell
     await page.notebook.selectCells(0);
     // Reload JupyterLab page
-    await page.goto();
+    await (page as any as JupyterLabPage).reload({ waitForIsReady: false });
+    //await page.reload({ waitForIsReady: false });
+    await page.notebook.openByPath(`${tmpPath}/${fileName}`);
+    await page.notebook.activate(fileName);
     // Check that we are in the first cell
     expect(await page.notebook.isCellSelected(0)).toBe(true);
     // Check that only a fraction of cells have the widget
