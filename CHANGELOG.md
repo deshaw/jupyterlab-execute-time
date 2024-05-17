@@ -4,6 +4,10 @@
 
 - Add an option to show the cell outputs per second [#116](https://github.com/deshaw/jupyterlab-execute-time/pull/116)
 
+### Fixed
+
+- Fix extension not showing up in the Settings Editor [#120](https://github.com/deshaw/jupyterlab-execute-time/pull/120)
+
 ## [3.1.2](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.0...v3.1.2) (2024-02-14)
 
 ### Fixed

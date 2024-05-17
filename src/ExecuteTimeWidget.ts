@@ -39,41 +39,16 @@ export default class ExecuteTimeWidget extends Widget {
   constructor(
     panel: NotebookPanel,
     tracker: INotebookTracker,
-    settingRegistry: ISettingRegistry
+    settings: ISettingRegistry.ISettings
   ) {
     super();
     this._panel = panel;
     this._tracker = tracker;
-    this._settingRegistry = settingRegistry;
 
     this.updateConnectedCell = this.updateConnectedCell.bind(this);
-    settingRegistry.load(`${PLUGIN_NAME}:settings`).then(
-      (settings: ISettingRegistry.ISettings) => {
-        this._updateSettings(settings);
-        settings.changed.connect(this._updateSettings.bind(this));
 
-        // If the plugin is enabled, force recording of timing
-        // We only do this once (not on every settings update) in case the user tries to turn it off
-        if (settings.get('enabled').composite) {
-          this._settingRegistry
-            .load('@jupyterlab/notebook-extension:tracker')
-            .then(
-              (nbSettings: ISettingRegistry.ISettings) =>
-                nbSettings.set('recordTiming', true),
-              (err: Error) => {
-                console.error(
-                  `jupyterlab-execute-time: Could not force metadata recording: ${err}`
-                );
-              }
-            );
-        }
-      },
-      (err: Error) => {
-        console.error(
-          `jupyterlab-execute-time: Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`
-        );
-      }
-    );
+    this._updateSettings(settings);
+    settings.changed.connect(this._updateSettings.bind(this));
   }
 
   /**
@@ -517,7 +492,6 @@ export default class ExecuteTimeWidget extends Widget {
   } = {};
   private _tracker: INotebookTracker;
   private _panel: NotebookPanel;
-  private _settingRegistry: ISettingRegistry;
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,
