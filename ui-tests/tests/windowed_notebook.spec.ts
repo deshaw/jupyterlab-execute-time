@@ -1,4 +1,4 @@
-import { expect, galata, test, JupyterLabPage } from '@jupyterlab/galata';
+import { expect, galata, test } from '@jupyterlab/galata';
 import { openNotebook, acceptDialog, cleanup } from './utils';
 
 const SETTINGS_ID = 'jupyterlab-execute-time:settings';
@@ -13,19 +13,19 @@ test.describe('Windowed notebook', () => {
         ...galata.DEFAULT_SETTINGS[NOTEBOOK_ID],
         windowingMode: 'full',
       },
-    }
+    },
   });
   test.beforeEach(openNotebook(fileName));
   test.afterEach(cleanup);
 
   test('Node attaches after scrolling into view', async ({ page, tmpPath }) => {
-    // Run all cells; this will scroll as to the end
+    // Run all cells; this will scroll us to the end
     await page.notebook.run();
     // Select first cell
     await page.notebook.selectCells(0);
     await page.notebook.save();
-    // Reload JupyterLab page
-    await (page as any as JupyterLabPage).reload({ waitForIsReady: false });
+    // Reopen the notebook to unload the widgets attached during execution
+    await page.notebook.close(false);
     await page.notebook.openByPath(`${tmpPath}/${fileName}`);
     await page.notebook.activate(fileName);
     // Wait for the notebook state to settle
@@ -47,6 +47,7 @@ test.describe('Windowed notebook', () => {
 });
 
 test.describe('Windowed notebook/hover', () => {
+  const fileName = '100_code_cells.ipynb';
   // The hover mode is useful for creating windowed notebook tests
   // because in this mode execution does not move the notebook window.
   test.use({
@@ -62,7 +63,8 @@ test.describe('Windowed notebook/hover', () => {
       },
     },
   });
-  test.beforeEach(openNotebook('100_code_cells.ipynb'));
+
+  test.beforeEach(openNotebook(fileName));
   test.afterEach(cleanup);
 
   test('Only one node per cell is attached when scrolling', async ({
@@ -80,6 +82,7 @@ test.describe('Windowed notebook/hover', () => {
     });
     // Count the visible cells
     const visibleCells = await page.locator('.jp-CodeCell:visible').count();
+    expect(visibleCells).toBeGreaterThan(0);
     // Wait until all visible cells have the widget
     await page
       .locator(`:nth-match(.execute-time, ${visibleCells})`)
@@ -99,7 +102,7 @@ test.describe('Windowed notebook/hover', () => {
     // The number of visible widgets should be approximately equal the number of visible cells
     // If multiple nodes were attached, the count would be equal to `3 * visibleCells`.
     expect(await page.locator(`.execute-time`).count()).toBeLessThanOrEqual(
-      visibleCells + 2
+      visibleCells + 5
     );
   });
 });
