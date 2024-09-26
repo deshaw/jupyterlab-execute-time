@@ -1,15 +1,20 @@
+:root {
+  --jp-execute-time-highlight: var(--jp-brand-color3, #bbdefb);
+  --jp-execute-time-background: var(--jp-cell-editor-background);
+}
+
 /* Transition to highlight a cell change */
 @keyframes executeHighlight {
   from {
-    background-color: var(--md-blue-100, #9fccff);
+    background-color: var(--jp-execute-time-highlight);
   }
   to {
-    background-color: var(--jp-cell-editor-background);
+    background-color: var(--jp-execute-time-background);
   }
 }
 
 .execute-time {
-  background-color: var(--jp-cell-editor-background);
+  background-color: var(--jp-execute-time-background);
   display: flex;
   justify-content: space-between;
   margin-top: 2px;
