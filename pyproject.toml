@@ -1,14 +1,106 @@
 [build-system]
-requires = ["jupyter_packaging~=0.10,<2", "jupyterlab~=4.0.0"]
-build-backend = "jupyter_packaging.build_api"
+requires = [
+    "hatchling",
+    "jupyterlab~=4.0.0",
+]
+build-backend = "hatchling.build"
 
-[tool.jupyter-packaging.options]
-skip-if-exists = ["jupyterlab_execute_time/labextension/static/style.js"]
-ensured-targets = ["jupyterlab_execute_time/labextension/static/style.js", "jupyterlab_execute_time/labextension/package.json"]
+[project]
+name = "jupyterlab-execute-time"
+description = "Display cell timings in Jupyter Lab"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+    { name = "Marc Udoff" },
+]
+keywords = [
+    "Jupyter",
+    "JupyterLab",
+    "JupyterLab4",
+]
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "Framework :: Jupyter :: JupyterLab :: Extensions",
+    "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "jupyterlab>=4,<5",
+]
+version = "3.2.0"
 
-[tool.jupyter-packaging.builder]
-factory = "jupyter_packaging.npm_builder"
+[project.license]
+file = "LICENSE.txt"
 
-[tool.jupyter-packaging.build-args]
+[project.urls]
+Homepage = "https://github.com/deshaw/jupyterlab-execute-time"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"jupyterlab_execute_time/labextension/static" = "share/jupyter/labextensions/jupyterlab-execute-time/static"
+"jupyterlab_execute_time/labextension/schemas/jupyterlab-execute-time" = "share/jupyter/labextensions/jupyterlab-execute-time/schemas/jupyterlab-execute-time"
+"install.json" = "share/jupyter/labextensions/jupyterlab-execute-time/install.json"
+"jupyterlab_execute_time/labextension/build_log.json" = "share/jupyter/labextensions/jupyterlab-execute-time/build_log.json"
+"jupyterlab_execute_time/labextension/package.json" = "share/jupyter/labextensions/jupyterlab-execute-time/package.json"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".github",
+]
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = [
+    "hatch-jupyter-builder>=0.9.1",
+]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "jupyterlab_execute_time/labextension/static/style.js",
+    "jupyterlab_execute_time/labextension/package.json",
+]
+skip-if-exists = [
+    "jupyterlab_execute_time/labextension/static/style.js",
+]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_dir = "jupyterlab_execute_time/labextension"
+source_dir = "src"
+build_cmd = "install:extension"
+npm = [
+    "jlpm",
+]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
-npm = ["jlpm"]
+npm = [
+    "jlpm",
+]
+
+[tool.tbump]
+field = [
+    { name = "channel", default = "" },
+    { name = "release", default = "" },
+]
+
+[tool.tbump.version]
+current = "3.2.0"
+regex = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)((?P<channel>a|b|rc|.dev)(?P<release>\\d+))?"
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
+version_template = "version = \"{major}.{minor}.{patch}{channel}{release}\""
+
+[[tool.tbump.file]]
+src = "package.json"
+version_template = "\"version\": \"{major}.{minor}.{patch}{channel}{release}\""
