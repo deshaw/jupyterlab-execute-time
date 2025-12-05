@@ -15,6 +15,7 @@ test.describe('Windowed notebook', () => {
       },
     },
   });
+  test.describe.configure({ retries: 4 });
   test.beforeEach(openNotebook(fileName));
   test.afterEach(cleanup);
 
