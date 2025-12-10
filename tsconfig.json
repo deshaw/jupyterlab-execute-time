@@ -18,8 +18,7 @@
     "strict": true,
     "strictNullChecks": false,
     "target": "es2020",
-    "types": [],
-    "skipLibCheck": true,
+    "types": []
   },
   "include": ["src/*"]
 }
