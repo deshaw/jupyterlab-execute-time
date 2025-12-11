@@ -162,6 +162,27 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   /**
+   * Check if a cell is in an orphaned execution state.
+   * This typically happens when a cell is duplicated while running.
+   * @param cell
+   * @returns true if the cell is orphaned
+   * @private
+   */
+  _isCellOrphaned(cell: CodeCell): boolean {
+    const executionState = cell.model.executionState;
+    const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
+    const hasExecuteInput = 'iopub.execute_input' in executionMetadata;
+    const hasReply = 'shell.execute_reply' in executionMetadata;
+    const hasFailed = 'execution_failed' in executionMetadata;
+
+    // Cell is orphaned if it started executing but never completed
+    // and will never receive a reply
+    return (
+      executionState === 'idle' && hasExecuteInput && !hasReply && !hasFailed
+    );
+  }
+
+  /**
    * Update the code cell to reflect the metadata
    * @param cell
    * @private
@@ -182,6 +203,10 @@ export default class ExecuteTimeWidget extends Widget {
     }
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
+      // Early exit if cell is in orphaned state
+      if (this._isCellOrphaned(cell)) {
+        return;
+      }
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
@@ -421,12 +446,12 @@ export default class ExecuteTimeWidget extends Widget {
 
     const cells = this._panel.context.model.cells;
     if (this._settings.enabled) {
-      cells.changed.connect(this.updateConnectedCell);
+      cells.changed.connect(this.updateConnectedCell, this);
       for (let i = 0; i < cells.length; ++i) {
         this._registerMetadataChanges(cells.get(i));
       }
     } else {
-      cells.changed.disconnect(this.updateConnectedCell);
+      cells.changed.disconnect(this.updateConnectedCell, this);
       for (let i = 0; i < cells.length; ++i) {
         this._deregisterMetadataChanges(cells.get(i));
       }
