@@ -177,7 +177,9 @@ export default class ExecuteTimeWidget extends Widget {
 
     // Cell is orphaned if it started executing but never completed
     // and will never receive a reply
-    return executionState === 'idle' && hasExecuteInput && !hasReply && !hasFailed;
+    return (
+      executionState === 'idle' && hasExecuteInput && !hasReply && !hasFailed
+    );
   }
 
   /**

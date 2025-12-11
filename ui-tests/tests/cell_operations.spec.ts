@@ -68,7 +68,9 @@ test.describe('Cell operations', () => {
     await Promise.all([firstRunPromise, secondRunPromise]);
   });
 
-  test('Duplicating a running cell should not duplicate time widget', async ({ page }) => {
+  test('Duplicating a running cell should not duplicate time widget', async ({
+    page,
+  }) => {
     await page.notebook.addCell('code', 'from time import sleep\nsleep(3)');
     const cellCount = await page.locator('.jp-Cell').count();
     const newIndex = cellCount - 1;
@@ -85,7 +87,9 @@ test.describe('Cell operations', () => {
     await selectedCell.click();
     await page.keyboard.press('Enter');
     // Click the duplicate-below button inside the selected cell
-    await selectedCell.locator('jp-button[data-command="notebook:duplicate-below"]').click();
+    await selectedCell
+      .locator('jp-button[data-command="notebook:duplicate-below"]')
+      .click();
 
     // The duplicated running cell should NOT get an execute-time widget:
     await expect(page.locator('.execute-time')).toHaveCount(1);
