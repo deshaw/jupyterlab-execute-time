@@ -57,7 +57,6 @@
     "watch:src": "tsc -w --sourceMap"
   },
   "resolutions": {
-    "@jupyterlab/observables": "4.5.0",
     "lib0": "0.2.111"
   },
   "dependencies": {
