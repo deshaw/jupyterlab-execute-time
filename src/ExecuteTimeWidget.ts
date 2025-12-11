@@ -173,10 +173,11 @@ export default class ExecuteTimeWidget extends Widget {
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     const hasExecuteInput = 'iopub.execute_input' in executionMetadata;
     const hasReply = 'shell.execute_reply' in executionMetadata;
+    const hasFailed = 'execution_failed' in executionMetadata;
 
     // Cell is orphaned if it started executing but never completed
     // and will never receive a reply
-    return executionState === 'idle' && hasExecuteInput && !hasReply;
+    return executionState === 'idle' && hasExecuteInput && !hasReply && !hasFailed;
   }
 
   /**
