@@ -125,7 +125,7 @@ This project is released under a [BSD-3-Clause license](https://github.com/desha
 We love contributions! Before you can contribute, please sign and submit this [Contributor License Agreement (CLA)](https://www.deshaw.com/oss/cla).
 This CLA is in place to protect all users of this project.
 
-"Jupyter" is a trademark of the NumFOCUS foundation, of which Project Jupyter is a part.
+"Jupyter" is a trademark of the LF Charities, of which Project Jupyter is a part.
 
 [pypi-url]: https://pypi.org/project/jupyterlab-execute-time
 [pypi-image]: https://img.shields.io/pypi/v/jupyterlab-execute-time
