@@ -1,4 +1,4 @@
-## [3.3.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.2.0...v3.3.0) (unreleased)
+## [3.3.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.2.0...v3.3.0) (2025-12-23)
 
 ### Added
 
