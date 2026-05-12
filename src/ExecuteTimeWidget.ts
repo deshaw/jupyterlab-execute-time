@@ -32,6 +32,7 @@ export interface IExecuteTimeSettings {
   showDate: boolean;
   historyCount: number;
   dateFormat: string;
+  timezone: string;
   showOutputsPerSecond: boolean;
 }
 
@@ -324,7 +325,11 @@ export default class ExecuteTimeWidget extends Widget {
 
           msg = failed ? 'Failed' : 'Last executed';
           if (this._settings.showDate) {
-            msg += ` at ${getTimeString(endTime, this._settings.dateFormat)}`;
+            msg += ` at ${getTimeString(
+              endTime,
+              this._settings.dateFormat,
+              this._settings.timezone
+            )}`;
           }
           msg += ` in ${executionTime}`;
 
@@ -375,7 +380,8 @@ export default class ExecuteTimeWidget extends Widget {
         }
         msg = `Execution started at ${getTimeString(
           startTime,
-          this._settings.dateFormat
+          this._settings.dateFormat,
+          this._settings.timezone
         )}`;
       } else if (queuedTime) {
         const lastRunTime = executionTimeNode.getAttribute(
@@ -387,7 +393,8 @@ export default class ExecuteTimeWidget extends Widget {
 
         msg = `Execution queued at ${getTimeString(
           queuedTime,
-          this._settings.dateFormat
+          this._settings.dateFormat,
+          this._settings.timezone
         )}`;
       }
       if (executionTimeNode.textContent !== msg) {
@@ -440,6 +447,8 @@ export default class ExecuteTimeWidget extends Widget {
         formatValidationResult.message
       );
     }
+
+    this._settings.timezone = settings.get('timezone').composite as string;
 
     this._settings.showOutputsPerSecond = settings.get('showOutputsPerSecond')
       .composite as boolean;
@@ -527,6 +536,7 @@ export default class ExecuteTimeWidget extends Widget {
     showDate: true,
     historyCount: 5,
     dateFormat: 'yyy-MM-dd HH:mm:ss',
+    timezone: '',
     showOutputsPerSecond: false,
   };
 }

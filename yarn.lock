@@ -3745,6 +3745,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns-tz@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "date-fns-tz@npm:2.0.1"
+  peerDependencies:
+    date-fns: 2.x
+  checksum: 2d2bb3d67f1ac876a7bd3bbe027aba61347d21c74f20a3f014c53d6057a7a1653ed3021c2d9271dc24411ab38f82763fec362c4f24e944465172cd80ee8c4b5f
+  languageName: node
+  linkType: hard
+
 "date-fns@npm:^2.29.3":
   version: 2.30.0
   resolution: "date-fns@npm:2.30.0"
@@ -5774,6 +5783,7 @@ __metadata:
     "@typescript-eslint/parser": ~5.55.0
     chai: ^4.3.7
     date-fns: ^2.29.3
+    date-fns-tz: ^2.0.0
     eslint: ~8.36.0
     eslint-config-prettier: ~8.7.0
     eslint-plugin-prettier: ~4.2.1

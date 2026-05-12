@@ -60,6 +60,12 @@
       "default": "yyy-MM-dd HH:mm:ss",
       "pattern": "[yGuqQMLwdeEcabBhHkKmsSzOxX\\W].*"
     },
+    "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "description": "IANA timezone name (e.g. \"UTC\", \"America/New_York\") used to render every timestamp. Leave empty to use the browser's local timezone.",
+      "default": ""
+    },
     "showOutputsPerSecond": {
       "type": "boolean",
       "title": "Show Outputs Per Second",

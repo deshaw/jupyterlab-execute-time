@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-execute-time",
-  "version": "3.3.0",
+  "version": "3.3.0+loft.1",
   "description": "Display cell timings in Jupyter Lab",
   "keywords": [
     "jupyter",
@@ -26,7 +26,10 @@
   "jupyterlab": {
     "extension": true,
     "schemaDir": "schema",
-    "outputDir": "jupyterlab_execute_time/labextension"
+    "outputDir": "jupyterlab_execute_time/labextension",
+    "sharedPackages": {
+      "date-fns-tz": false
+    }
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -69,7 +72,8 @@
     "@jupyterlab/settingregistry": "^4.5.0",
     "@lumino/coreutils": "^2.0.0-rc.1",
     "@lumino/widgets": "^2.0.0-rc.1",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.29.3",
+    "date-fns-tz": "^2.0.0"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^4.0.0",
