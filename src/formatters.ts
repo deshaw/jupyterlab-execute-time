@@ -1,5 +1,5 @@
 import { differenceInMilliseconds, format } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
+import { tz } from '@date-fns/tz';
 
 export interface IFormatValidationResult {
   isValid: boolean;
@@ -36,7 +36,7 @@ export const getTimeString = (
   timezone = ''
 ): string => {
   return timezone
-    ? formatInTimeZone(date, timezone, dateFormat)
+    ? format(date, dateFormat, { in: tz(timezone) })
     : format(date, dateFormat);
 };
 

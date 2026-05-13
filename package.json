@@ -28,7 +28,7 @@
     "schemaDir": "schema",
     "outputDir": "jupyterlab_execute_time/labextension",
     "sharedPackages": {
-      "date-fns-tz": false
+      "@date-fns/tz": false
     }
   },
   "main": "lib/index.js",
@@ -63,6 +63,7 @@
     "lib0": "0.2.111"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
     "@jupyterlab/application": "^4.5.0",
     "@jupyterlab/apputils": "^4.5.0",
     "@jupyterlab/cells": "^4.5.0",
@@ -72,8 +73,7 @@
     "@jupyterlab/settingregistry": "^4.5.0",
     "@lumino/coreutils": "^2.0.0-rc.1",
     "@lumino/widgets": "^2.0.0-rc.1",
-    "date-fns": "^2.29.3",
-    "date-fns-tz": "^2.0.0"
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^4.0.0",

@@ -2,6 +2,7 @@
   "title": "Execute Time",
   "type": "object",
   "additionalProperties": true,
+  "jupyter.lab.transform": true,
   "properties": {
     "enabled": {
       "type": "boolean",
@@ -63,7 +64,7 @@
     "timezone": {
       "type": "string",
       "title": "Timezone",
-      "description": "IANA timezone name (e.g. \"UTC\", \"America/New_York\") used to render every timestamp. Leave empty to use the browser's local timezone.",
+      "description": "IANA timezone used to render every timestamp. Leave empty to use the browser's local timezone. The dropdown options are populated at runtime from `Intl.supportedValuesOf('timeZone')`; any IANA name is accepted via JSON editing.",
       "default": ""
     },
     "showOutputsPerSecond": {
