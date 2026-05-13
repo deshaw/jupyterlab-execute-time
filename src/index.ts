@@ -43,34 +43,27 @@ const extension: JupyterFrontEndPlugin<void> = {
   ) => {
     const pluginId = `${PLUGIN_NAME}:settings`;
 
-    // Populate the `timezone` dropdown with the IANA timezones the host
-    // runtime supports. Done as a `fetch` transform so the choices are
-    // baked into the schema before the settings UI renders it. Note that
-    // we intentionally only add `oneOf` here (not in the static schema);
-    // the server validates writes against the static schema, so leaving
-    // it as just `type: "string"` accepts any IANA name on save.
+    // Inject the list of IANA timezones supported by the runtime into the
+    // `timezone` schema's `oneOf` so the settings editor renders it as a
+    // dropdown. The static schema only declares `type: "string"` so the
+    // server (which validates writes against the static schema) keeps
+    // accepting any IANA name; the constrained list lives only in this
+    // client-side, fetch-phase transform.
     settingRegistry.transform(pluginId, {
-      fetch: plugin => {
-        // `Intl.supportedValuesOf` lives in lib.es2022.intl; cast narrowly
-        // instead of bumping the project-wide tsconfig.
-        const supportedValuesOf = (
-          Intl as { supportedValuesOf?: (key: 'timeZone') => string[] }
-        ).supportedValuesOf;
-        // Always include UTC: some ICU builds omit it from the canonical
-        // list (returning only `Etc/UTC`), which would prevent the most
-        // common choice from appearing in the dropdown.
+      fetch: (plugin) => {
+        // `Intl.supportedValuesOf('timeZone')` is not consistent across JS
+        // engines about exposing the bare `UTC` alias (some return only
+        // `Etc/UTC`). Prepend it ourselves and dedupe so the most common
+        // choice is always selectable.
         const zones = Array.from(
-          new Set([
-            'UTC',
-            ...(supportedValuesOf ? supportedValuesOf('timeZone') : []),
-          ])
+          new Set(['UTC', ...Intl.supportedValuesOf('timeZone')])
         ).sort();
         const properties = plugin.schema.properties ?? {};
         properties.timezone = {
           ...properties.timezone,
           oneOf: [
             { type: 'string', const: '', title: 'Browser local time' },
-            ...zones.map(zone => ({
+            ...zones.map((zone) => ({
               type: 'string',
               const: zone,
               title: zone,
