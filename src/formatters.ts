@@ -1,4 +1,5 @@
 import { differenceInMilliseconds, format } from 'date-fns';
+import { tz } from '@date-fns/tz';
 
 export interface IFormatValidationResult {
   isValid: boolean;
@@ -31,9 +32,12 @@ export const validateDateFormat = (
 
 export const getTimeString = (
   date: Date,
-  dateFormat = 'yyy-MM-dd HH:mm:ss'
+  dateFormat = 'yyy-MM-dd HH:mm:ss',
+  timezone = ''
 ): string => {
-  return format(date, dateFormat);
+  return timezone
+    ? format(date, dateFormat, { in: tz(timezone) })
+    : format(date, dateFormat);
 };
 
 export const getTimeDiff = (end: Date, start: Date): string => {

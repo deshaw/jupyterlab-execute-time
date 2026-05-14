@@ -41,9 +41,43 @@ const extension: JupyterFrontEndPlugin<void> = {
     tracker: INotebookTracker,
     settingRegistry: ISettingRegistry
   ) => {
+    const pluginId = `${PLUGIN_NAME}:settings`;
+
+    // Inject the list of IANA timezones supported by the runtime into the
+    // `timezone` schema's `oneOf` so the settings editor renders it as a
+    // dropdown. The static schema only declares `type: "string"` so the
+    // server (which validates writes against the static schema) keeps
+    // accepting any IANA name; the constrained list lives only in this
+    // client-side, fetch-phase transform.
+    settingRegistry.transform(pluginId, {
+      fetch: (plugin) => {
+        // `Intl.supportedValuesOf('timeZone')` is not consistent across JS
+        // engines about exposing the bare `UTC` alias (some return only
+        // `Etc/UTC`). Prepend it ourselves and dedupe so the most common
+        // choice is always selectable.
+        const zones = Array.from(
+          new Set(['UTC', ...Intl.supportedValuesOf('timeZone')])
+        ).sort();
+        const properties = plugin.schema.properties ?? {};
+        properties.timezone = {
+          ...properties.timezone,
+          oneOf: [
+            { type: 'string', const: '', title: 'Browser local time' },
+            ...zones.map((zone) => ({
+              type: 'string',
+              const: zone,
+              title: zone,
+            })),
+          ],
+        };
+        plugin.schema.properties = properties;
+        return plugin;
+      },
+    });
+
     let settings: ISettingRegistry.ISettings;
     try {
-      settings = await settingRegistry.load(`${PLUGIN_NAME}:settings`);
+      settings = await settingRegistry.load(pluginId);
     } catch (err: unknown) {
       console.error(
         `jupyterlab-execute-time: Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`

@@ -2,6 +2,7 @@
   "title": "Execute Time",
   "type": "object",
   "additionalProperties": true,
+  "jupyter.lab.transform": true,
   "properties": {
     "enabled": {
       "type": "boolean",
@@ -59,6 +60,12 @@
       "description": "Show the formatted date string in the given format. For example \"yyy-MM-dd HH:mm:ss\" results in \"2023-02-28 14:25:57 \", \"dd/MM/YYY HH:mm:ss (O)\" results in \"28/02/2023 14:25:57 (GMT +3)\". Find out more on unicode date field symbols on this link [https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table]",
       "default": "yyy-MM-dd HH:mm:ss",
       "pattern": "[yGuqQMLwdeEcabBhHkKmsSzOxX\\W].*"
+    },
+    "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "description": "IANA timezone used to render every timestamp. Leave empty to use the browser's local timezone. The dropdown options are populated at runtime from `Intl.supportedValuesOf('timeZone')`; any IANA name is accepted via JSON editing.",
+      "default": ""
     },
     "showOutputsPerSecond": {
       "type": "boolean",
