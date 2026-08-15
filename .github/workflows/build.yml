@@ -50,6 +50,8 @@ jobs:
       with:
         python-version: '3.11'
         architecture: 'x64'
+    - name: Install dependencies
+      run: python -m pip install -U "jupyterlab>=4.0.0,<5"
     - name: Lint the extension
       run: |
         set -eux

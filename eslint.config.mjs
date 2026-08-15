@@ -62,6 +62,7 @@ export default defineConfig([
       '@typescript-eslint/no-use-before-define': 'off',
       curly: ['error', 'all'],
       eqeqeq: 'error',
+      'jupyter/no-untranslated-string': 'off',
       'prefer-arrow-callback': 'error'
     }
   },
