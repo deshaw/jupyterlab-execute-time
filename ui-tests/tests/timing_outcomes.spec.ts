@@ -26,7 +26,7 @@ test.describe('Timing outcomes', () => {
     const widget = await cell.waitForSelector('.execute-time');
     expect(await widget.textContent()).toContain('Execution started at');
     expect(await maskedScreenshot(widget)).toMatchSnapshot(
-      'execution-started.png'
+      'execution-started.png',
     );
   });
 

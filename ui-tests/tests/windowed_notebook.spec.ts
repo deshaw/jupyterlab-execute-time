@@ -75,7 +75,7 @@ test.describe('Windowed notebook/hover', () => {
     await page.notebook.setCell(
       1,
       'code',
-      'from time import sleep\ndef f(i):\n    sleep(0.2)'
+      'from time import sleep\ndef f(i):\n    sleep(0.2)',
     );
     // Run cells
     await page.evaluate(async () => {
@@ -103,7 +103,7 @@ test.describe('Windowed notebook/hover', () => {
     // The number of visible widgets should be approximately equal the number of visible cells
     // If multiple nodes were attached, the count would be equal to `3 * visibleCells`.
     expect(await page.locator(`.execute-time`).count()).toBeLessThanOrEqual(
-      visibleCells + 5
+      visibleCells + 5,
     );
   });
 });

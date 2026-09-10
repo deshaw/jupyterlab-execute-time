@@ -56,7 +56,7 @@ jobs:
       run: |
         set -eux
         jlpm --immutable
-        jlpm run eslint:check
+        jlpm run lint:check
     - name: Build the extension
       run: |
         set -eux
