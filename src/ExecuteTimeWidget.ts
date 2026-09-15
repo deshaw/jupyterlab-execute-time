@@ -17,10 +17,22 @@ const EXECUTE_TIME_CLASS = 'execute-time';
 
 const TOOLTIP_PREFIX = 'Previous Runs:';
 const PREV_DATA_EXECUTION_TIME_ATTR = 'data-prev-execution-time';
+// Keep in-memory history briefly after all views close to support notebook reopen.
+const EXECUTION_HISTORY_CLEANUP_MS = 30 * 60 * 1000;
 
 // How long do we animate the color for
 const ANIMATE_TIME_MS = 1000;
 const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
+
+interface IExecutionTimeHistory {
+  lastExecutionTime: string | null;
+  lastExecutionEndTime: string | null;
+  previousExecutionTimes: string[];
+}
+
+const executionTimeHistory = new Map<string, IExecutionTimeHistory>();
+const executionTimeHistoryCleanup = new Map<string, number>();
+const executionTimeHistoryReferences = new Map<string, number>();
 
 export interface IExecuteTimeSettings {
   enabled: boolean;
@@ -45,11 +57,30 @@ export default class ExecuteTimeWidget extends Widget {
     super();
     this._panel = panel;
     this._tracker = tracker;
+    this._settingsRegistry = settings;
+    this._settingsChanged = this._updateSettings.bind(this);
 
     this.updateConnectedCell = this.updateConnectedCell.bind(this);
 
     this._updateSettings(settings);
-    settings.changed.connect(this._updateSettings.bind(this));
+    settings.changed.connect(this._settingsChanged);
+  }
+
+  dispose() {
+    if (this.isDisposed) {
+      return;
+    }
+
+    this._settingsRegistry.changed.disconnect(this._settingsChanged);
+
+    // Disconnect notebook and per-cell listeners before releasing history refs.
+    const cells = this._panel.context.model.cells;
+    cells.changed.disconnect(this.updateConnectedCell, this);
+    for (let i = 0; i < cells.length; ++i) {
+      this._deregisterMetadataChanges(cells.get(i));
+    }
+
+    super.dispose();
   }
 
   /**
@@ -85,6 +116,7 @@ export default class ExecuteTimeWidget extends Widget {
 
   _registerMetadataChanges(cellModel: ICellModel) {
     if (!(cellModel.id in this._cellSlotMap)) {
+      this._retainExecutionHistory(cellModel.id);
       // Register signal handler with `cellModel` stored in closure.
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
@@ -101,6 +133,7 @@ export default class ExecuteTimeWidget extends Widget {
         this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
         cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal);
       };
+      this._cellDisposedSlotMap[cellModel.id] = deregisterOnDisposal;
       cellModel.sharedModel.disposed.connect(deregisterOnDisposal);
     }
     // Always re-render cells.
@@ -113,10 +146,19 @@ export default class ExecuteTimeWidget extends Widget {
       const fn = this._cellSlotMap[cellModel.id];
       if (fn) {
         cellModel.metadataChanged.disconnect(fn);
+        const disposedFn = this._cellDisposedSlotMap[cellModel.id];
+        if (disposedFn) {
+          // The shared model can outlive this widget, so remove its cleanup hook too.
+          if (cellModel.sharedModel) {
+            cellModel.sharedModel.disposed.disconnect(disposedFn);
+          }
+          delete this._cellDisposedSlotMap[cellModel.id];
+        }
         const codeCell = this._getCodeCell(cellModel);
         if (codeCell) {
           this._removeExecuteNode(codeCell);
         }
+        this._releaseExecutionHistory(cellModel.id);
       }
       delete this._cellSlotMap[cellModel.id];
     }
@@ -233,6 +275,7 @@ export default class ExecuteTimeWidget extends Widget {
         executionTimeNode.remove();
         parentNode.append(executionTimeNode);
       }
+      this._renderExecutionTimeHistory(cell.model.id, executionTimeNode);
       // Ensure that the current cell onclick actives the current cell
       executionTimeNode.onclick = () => {
         // This check makes sure that range selections (mostly) work
@@ -299,28 +342,17 @@ export default class ExecuteTimeWidget extends Widget {
         if (this._settings.minTime <= executionTimeMillis / 1000.0) {
           const executionTime = getTimeDiff(endTime, startTime);
           const executionsPerSecond = 1000.0 / executionTimeMillis;
-          const lastExecutionTime = executionTimeNode.getAttribute(
-            PREV_DATA_EXECUTION_TIME_ATTR
-          );
-          // Store the last execution time in the node to be used for various options
-          executionTimeNode.setAttribute(
-            PREV_DATA_EXECUTION_TIME_ATTR,
-            executionTime
-          );
-          // Only add a tooltip for all non-displayed execution times.
-          if (this._settings.historyCount > 0 && lastExecutionTime) {
-            let tooltip = executionTimeNode.getAttribute('title');
-            const executionTimes = [lastExecutionTime];
-            if (tooltip) {
-              executionTimes.push(
-                ...tooltip.substring(TOOLTIP_PREFIX.length + 1).split('\n')
-              );
-              // JS does the right thing of having empty items if extended
-              executionTimes.length = this._settings.historyCount;
+          const history = this._getExecutionTimeHistory(cell.model.id);
+          if (history.lastExecutionEndTime !== endTimeStr) {
+            if (this._settings.historyCount > 0 && history.lastExecutionTime) {
+              history.previousExecutionTimes.unshift(history.lastExecutionTime);
+              history.previousExecutionTimes.length =
+                this._settings.historyCount;
             }
-            tooltip = `${TOOLTIP_PREFIX}\n${executionTimes.join('\n')}`;
-            executionTimeNode.setAttribute('title', tooltip);
+            history.lastExecutionTime = executionTime;
+            history.lastExecutionEndTime = endTimeStr;
           }
+          this._renderExecutionTimeHistory(cell.model.id, executionTimeNode);
           executionTimeNode.children[2].textContent = '';
 
           msg = failed ? 'Failed' : 'Last executed';
@@ -344,9 +376,8 @@ export default class ExecuteTimeWidget extends Widget {
         }
       } else if (startTime) {
         if (this._settings.showLiveExecutionTime) {
-          const lastRunTime = executionTimeNode.getAttribute(
-            'data-prev-execution-time'
-          );
+          const history = executionTimeHistory.get(cell.model.id);
+          const lastRunTime = history?.lastExecutionTime;
           const workingTimer = setInterval(() => {
             if (
               !executionTimeNode.children[0].textContent.startsWith(
@@ -384,9 +415,8 @@ export default class ExecuteTimeWidget extends Widget {
           this._settings.timezone
         )}`;
       } else if (queuedTime) {
-        const lastRunTime = executionTimeNode.getAttribute(
-          'data-prev-execution-time'
-        );
+        const history = executionTimeHistory.get(cell.model.id);
+        const lastRunTime = history?.lastExecutionTime;
         if (this._settings.showLiveExecutionTime && lastRunTime) {
           executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
@@ -410,7 +440,6 @@ export default class ExecuteTimeWidget extends Widget {
       }
     } else {
       // Hide it if data was removed (e.g. clear output).
-      // Don't remove as element store history, which are useful for later showing past runtime.
       const executionTimeNode = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`
       );
@@ -418,6 +447,93 @@ export default class ExecuteTimeWidget extends Widget {
         executionTimeNode.classList.add('execute-time-hidden');
       }
     }
+  }
+
+  /**
+   * Return the in-memory execution history for a cell, creating it on demand.
+   */
+  private _getExecutionTimeHistory(cellId: string): IExecutionTimeHistory {
+    let history = executionTimeHistory.get(cellId);
+    if (!history) {
+      history = {
+        lastExecutionTime: null,
+        lastExecutionEndTime: null,
+        previousExecutionTimes: [],
+      };
+      executionTimeHistory.set(cellId, history);
+    }
+    return history;
+  }
+
+  /**
+   * Apply stored previous-run history to the widget attributes and tooltip.
+   */
+  private _renderExecutionTimeHistory(
+    cellId: string,
+    executionTimeNode: HTMLDivElement
+  ) {
+    const history = executionTimeHistory.get(cellId);
+    if (!history) {
+      executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
+      executionTimeNode.removeAttribute('title');
+      return;
+    }
+
+    if (history.lastExecutionTime) {
+      executionTimeNode.setAttribute(
+        PREV_DATA_EXECUTION_TIME_ATTR,
+        history.lastExecutionTime
+      );
+    } else {
+      executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
+    }
+
+    const previousExecutionTimes = history.previousExecutionTimes.slice(
+      0,
+      this._settings.historyCount
+    );
+    if (this._settings.historyCount > 0 && previousExecutionTimes.length > 0) {
+      const tooltip = `${TOOLTIP_PREFIX}\n${previousExecutionTimes.join('\n')}`;
+      executionTimeNode.setAttribute('title', tooltip);
+    } else {
+      executionTimeNode.removeAttribute('title');
+    }
+  }
+
+  /**
+   * Mark a cell history entry as active and cancel any pending cleanup.
+   */
+  private _retainExecutionHistory(cellId: string) {
+    const timeout = executionTimeHistoryCleanup.get(cellId);
+    if (timeout !== undefined) {
+      window.clearTimeout(timeout);
+      executionTimeHistoryCleanup.delete(cellId);
+    }
+    executionTimeHistoryReferences.set(
+      cellId,
+      (executionTimeHistoryReferences.get(cellId) ?? 0) + 1
+    );
+  }
+
+  /**
+   * Release an active cell history reference and clean it up after a grace period.
+   */
+  private _releaseExecutionHistory(cellId: string) {
+    const referenceCount = executionTimeHistoryReferences.get(cellId);
+    if (referenceCount === undefined) {
+      return;
+    }
+    if (referenceCount > 1) {
+      executionTimeHistoryReferences.set(cellId, referenceCount - 1);
+      return;
+    }
+
+    executionTimeHistoryReferences.delete(cellId);
+    const timeout = window.setTimeout(() => {
+      executionTimeHistory.delete(cellId);
+      executionTimeHistoryCleanup.delete(cellId);
+    }, EXECUTION_HISTORY_CLEANUP_MS);
+    executionTimeHistoryCleanup.set(cellId, timeout);
   }
 
   _updateSettings(settings: ISettingRegistry.ISettings) {
@@ -524,8 +640,13 @@ export default class ExecuteTimeWidget extends Widget {
   private _cellSlotMap: {
     [id: string]: () => void;
   } = {};
+  private _cellDisposedSlotMap: {
+    [id: string]: () => void;
+  } = {};
   private _tracker: INotebookTracker;
   private _panel: NotebookPanel;
+  private _settingsRegistry: ISettingRegistry.ISettings;
+  private _settingsChanged: (settings: ISettingRegistry.ISettings) => void;
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,

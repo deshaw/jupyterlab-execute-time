@@ -31,6 +31,58 @@ test.describe('Cell operations', () => {
     expect(await page.locator('.execute-time').count()).toBe(4);
   });
 
+  test('Previous runs survive closing and reopening a notebook', async ({
+    page,
+    tmpPath,
+  }) => {
+    await page.notebook.runCell(0, true);
+    await page.notebook.runCell(1, true);
+    await page.notebook.runCell(1, true);
+
+    const widget = page
+      .locator('.jp-Cell[data-windowed-list-index="1"]')
+      .locator('.execute-time');
+    await expect(widget).toHaveAttribute('title', /^Previous Runs:\n.+/);
+    const previousRuns = await widget.getAttribute('title');
+
+    await page.notebook.save();
+    await page.notebook.close(false);
+    await page.notebook.openByPath(`${tmpPath}/Simple_notebook.ipynb`);
+    await page.notebook.activate('Simple_notebook.ipynb');
+
+    const reopenedWidget = page
+      .locator('.jp-Cell[data-windowed-list-index="1"]')
+      .locator('.execute-time');
+    await expect(reopenedWidget).toHaveAttribute('title', previousRuns!);
+  });
+
+  test('Previous runs survive changing a cell type away and back', async ({
+    page,
+  }) => {
+    await page.notebook.runCell(0, true);
+    await page.notebook.runCell(1, true);
+    await page.notebook.runCell(1, true);
+
+    const widget = page
+      .locator('.jp-Cell[data-windowed-list-index="1"]')
+      .locator('.execute-time');
+    await expect(widget).toHaveAttribute('title', /^Previous Runs:\n.+/);
+    const previousRuns = await widget.getAttribute('title');
+
+    await page.notebook.setCellType(1, 'markdown');
+    await expect(
+      page
+        .locator('.jp-Cell[data-windowed-list-index="1"]')
+        .locator('.execute-time')
+    ).toHaveCount(0);
+
+    await page.notebook.setCellType(1, 'code');
+    const restoredWidget = page
+      .locator('.jp-Cell[data-windowed-list-index="1"]')
+      .locator('.execute-time');
+    await expect(restoredWidget).toHaveAttribute('title', previousRuns!);
+  });
+
   test('Re-run a cell that is already running', async ({ page }) => {
     // Run `from time import sleep`
     await page.notebook.runCell(0, true);
