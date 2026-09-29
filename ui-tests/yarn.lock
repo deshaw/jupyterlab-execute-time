@@ -845,7 +845,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/galata@npm:5.6.0":
+"@jupyterlab/galata@npm:^5.6.0":
   version: 5.6.0
   resolution: "@jupyterlab/galata@npm:5.6.0"
   dependencies:
@@ -1649,7 +1649,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:1.60.0":
+"@playwright/test@npm:^1.60.0":
   version: 1.60.0
   resolution: "@playwright/test@npm:1.60.0"
   dependencies:
@@ -3452,8 +3452,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-execute-time-ui-tests@workspace:."
   dependencies:
-    "@jupyterlab/galata": 5.6.0
-    "@playwright/test": 1.60.0
+    "@jupyterlab/galata": ^5.6.0
+    "@playwright/test": ^1.60.0
   languageName: unknown
   linkType: soft
 
