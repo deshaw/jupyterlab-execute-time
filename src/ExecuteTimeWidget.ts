@@ -49,7 +49,7 @@ export default class ExecuteTimeWidget extends Widget {
     this.updateConnectedCell = this.updateConnectedCell.bind(this);
 
     this._updateSettings(settings);
-    settings.changed.connect(this._updateSettings.bind(this));
+    settings.changed.connect(this._updateSettings, this);
   }
 
   /**
@@ -88,7 +88,7 @@ export default class ExecuteTimeWidget extends Widget {
       // Register signal handler with `cellModel` stored in closure.
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
-      cellModel.metadataChanged.connect(fn);
+      cellModel.metadataChanged.connect(fn, this);
 
       // Copy cell model identifier and store a reference to `metadataChanged`
       // signal to keep them available even during cell model disposal.
@@ -99,9 +99,9 @@ export default class ExecuteTimeWidget extends Widget {
       // see the explanation in `updateConnectedCell()` method.
       const deregisterOnDisposal = () => {
         this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
-        cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal);
+        cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal, this);
       };
-      cellModel.sharedModel.disposed.connect(deregisterOnDisposal);
+      cellModel.sharedModel.disposed.connect(deregisterOnDisposal, this);
     }
     // Always re-render cells.
     // In case there was already metadata: do not highlight on first load.
@@ -112,7 +112,7 @@ export default class ExecuteTimeWidget extends Widget {
     if (cellModel !== undefined) {
       const fn = this._cellSlotMap[cellModel.id];
       if (fn) {
-        cellModel.metadataChanged.disconnect(fn);
+        cellModel.metadataChanged.disconnect(fn, this);
         const codeCell = this._getCodeCell(cellModel);
         if (codeCell) {
           this._removeExecuteNode(codeCell);
@@ -348,6 +348,7 @@ export default class ExecuteTimeWidget extends Widget {
           );
           const workingTimer = setInterval(() => {
             if (
+              cell.isDisposed ||
               !executionTimeNode.children[0].textContent.startsWith(
                 'Execution started at',
               )
