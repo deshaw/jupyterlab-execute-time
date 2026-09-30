@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import jupyterPlugin from '@jupyter/eslint-plugin';
+import { DEFAULT_LONG_LIVED_TYPES } from '@jupyter/eslint-plugin/lib/utils/signal-lifetime.js';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -12,6 +13,10 @@ const jupyterRecommended = jupyterPlugin.configs.recommended.map(config => ({
     ...config.plugins
   }
 }));
+
+// The settings object is loaded once in `activate` and shared by every
+// notebook, so it outlives the widgets which connect to its signals.
+const longLivedTypes = [...DEFAULT_LONG_LIVED_TYPES, 'ISettings'];
 
 export default defineConfig([
   {
@@ -63,6 +68,10 @@ export default defineConfig([
       curly: ['error', 'all'],
       eqeqeq: 'error',
       'jupyter/no-untranslated-string': 'off',
+      'jupyter/prefer-signal-this-arg': ['error', { longLivedTypes }],
+      'jupyter/require-disposable-ownership': 'error',
+      'jupyter/require-disposable-transfer': 'error',
+      'jupyter/require-signal-cleanup': ['error', { longLivedTypes }],
       'prefer-arrow-callback': 'error'
     }
   },
