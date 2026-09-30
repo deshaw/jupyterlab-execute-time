@@ -10,7 +10,7 @@
 
 ### Maintenance
 
-- Update the snapshots to fix integration tests CI  [#135](https://github.com/deshaw/jupyterlab-execute-time/pull/135)
+- Update the snapshots to fix integration tests CI [#135](https://github.com/deshaw/jupyterlab-execute-time/pull/135)
 - Use hatch-jupyter-builder [#132](https://github.com/deshaw/jupyterlab-execute-time/pull/132)
 
 ## [3.2.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v3.1.2...v3.2.0) (2024-09-12)
@@ -58,7 +58,7 @@
 
 - Ensure this only installs with Jupyterlab@4
 
-## ~[3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19)~
+## ~~[3.0.0](https://github.com/deshaw/jupyterlab-execute-time/compare/v2.3.1...v3.0.0) (2023-05-19)~~
 
 ### Changed
 

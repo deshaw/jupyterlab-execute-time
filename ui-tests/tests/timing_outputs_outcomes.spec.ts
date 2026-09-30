@@ -28,7 +28,7 @@ test.describe('Timing outcomes with ', () => {
     expect(await widget.textContent()).toContain('Last executed at');
     expect(await widget.textContent()).toContain('outputs at');
     expect(await maskedScreenshot(widget)).toMatchSnapshot(
-      'last-executed-outputs.png'
+      'last-executed-outputs.png',
     );
   });
 });
