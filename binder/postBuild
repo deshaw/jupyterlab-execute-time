@@ -33,7 +33,7 @@ def _(*args, **kwargs):
 _(sys.executable, "-m", "pip", "check")
 
 # install the labextension in develop mode
-_(sys.executable, "-m", "pip", "install", "-e", ".")
+_(sys.executable, "-m", "pip", "install", "-e", ".[dev]")
 _("jupyter-builder", "develop", "--overwrite", ".")
 
 # verify the environment the extension didn't break anything
