@@ -342,6 +342,10 @@ export default class ExecuteTimeWidget extends Widget {
           }
         }
       } else if (startTime) {
+        if (cell.model.executionState === 'idle') {
+          // Idle cell that has only start time should not be marked as executing.
+          return '';
+        }
         if (this._settings.showLiveExecutionTime) {
           const lastRunTime = executionTimeNode.getAttribute(
             'data-prev-execution-time',
