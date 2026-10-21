@@ -24,17 +24,16 @@ const EXECUTION_HISTORY_CLEANUP_MS = 30 * 60 * 1000;
 const ANIMATE_TIME_MS = 1000;
 const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
 
-interface IExecutionTimeHistory {
-  lastExecutionTime: string | null;
-  lastExecutionEndTime: string | null;
-  lastExecutionMetadata: JSONObject | null;
-  previousExecutionTimes: string[];
+interface IExecutionTime {
+  duration: string;
+  endTime: string;
+  metadata: JSONObject;
 }
 
 interface INotebookExecutionHistory {
   path: string;
   views: number;
-  cells: Map<string, IExecutionTimeHistory>;
+  cells: Map<string, IExecutionTime[]>;
   cleanup: Map<string, number>;
   references: Map<string, number>;
 }
@@ -376,16 +375,22 @@ export default class ExecuteTimeWidget extends Widget {
           const executionTime = getTimeDiff(endTime, startTime);
           const executionsPerSecond = 1000.0 / executionTimeMillis;
           const history = this._getExecutionTimeHistory(cell.model.id);
-          if (history.lastExecutionEndTime !== endTimeStr) {
-            if (this._settings.historyCount > 0 && history.lastExecutionTime) {
-              history.previousExecutionTimes.unshift(history.lastExecutionTime);
-              history.previousExecutionTimes.length =
-                this._settings.historyCount;
-            }
-            history.lastExecutionTime = executionTime;
-            history.lastExecutionEndTime = endTimeStr;
+          const recordedIndex = history.findIndex(
+            (run) => run.endTime === endTimeStr,
+          );
+          const run = {
+            duration: executionTime,
+            endTime: endTimeStr,
+            metadata: JSONExt.deepCopy(executionMetadata),
+          };
+          if (recordedIndex === -1) {
+            history.unshift(run);
+            history.splice(Math.max(0, this._settings.historyCount) + 1);
+          } else {
+            // Restoring saved metadata must not record the same run again.
+            // Replace records so notebook copies can safely share older ones.
+            history[recordedIndex] = run;
           }
-          history.lastExecutionMetadata = JSONExt.deepCopy(executionMetadata);
           this._renderExecutionTimeHistory(cell.model.id, executionTimeNode);
           executionTimeNode.children[2].textContent = '';
 
@@ -411,7 +416,7 @@ export default class ExecuteTimeWidget extends Widget {
       } else if (startTime) {
         if (this._settings.showLiveExecutionTime) {
           const history = this._history.cells.get(cell.model.id);
-          const lastRunTime = history?.lastExecutionTime;
+          const lastRunTime = history?.[0]?.duration;
           const workingTimer = setInterval(() => {
             if (
               cell.isDisposed ||
@@ -451,7 +456,7 @@ export default class ExecuteTimeWidget extends Widget {
         )}`;
       } else if (queuedTime) {
         const history = this._history.cells.get(cell.model.id);
-        const lastRunTime = history?.lastExecutionTime;
+        const lastRunTime = history?.[0]?.duration;
         if (this._settings.showLiveExecutionTime && lastRunTime) {
           executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
@@ -508,14 +513,18 @@ export default class ExecuteTimeWidget extends Widget {
     if (!execution || !JSONExt.isObject(execution)) {
       return;
     }
-    const matches = (history: IExecutionTimeHistory) =>
-      history.lastExecutionMetadata !== null &&
-      JSONExt.deepEqual(history.lastExecutionMetadata, execution);
+    const matchingHistory = (history: IExecutionTime[]) => {
+      const index = history.findIndex((run) =>
+        JSONExt.deepEqual(run.metadata, execution),
+      );
+      // Exclude runs recorded in the source after the notebook was copied.
+      return index === -1 ? undefined : history.slice(index);
+    };
     // A duplicated cell has a new ID, but belongs to the same notebook.
-    let source: IExecutionTimeHistory | undefined;
+    let source: IExecutionTime[] | undefined;
     for (const candidate of this._history.cells.values()) {
-      if (matches(candidate)) {
-        source = candidate;
+      source = matchingHistory(candidate);
+      if (source) {
         break;
       }
     }
@@ -523,32 +532,24 @@ export default class ExecuteTimeWidget extends Widget {
       // A copied notebook preserves cell IDs. Never share its mutable history.
       for (const notebook of notebookExecutionHistory.values()) {
         const candidate = notebook.cells.get(cellModel.id);
-        if (candidate && matches(candidate)) {
-          source = candidate;
+        source = candidate && matchingHistory(candidate);
+        if (source) {
           break;
         }
       }
     }
     if (source) {
-      this._history.cells.set(cellModel.id, {
-        ...source,
-        previousExecutionTimes: source.previousExecutionTimes.slice(),
-      });
+      this._history.cells.set(cellModel.id, source);
     }
   }
 
   /**
    * Return the in-memory execution history for a cell, creating it on demand.
    */
-  private _getExecutionTimeHistory(cellId: string): IExecutionTimeHistory {
+  private _getExecutionTimeHistory(cellId: string): IExecutionTime[] {
     let history = this._history.cells.get(cellId);
     if (!history) {
-      history = {
-        lastExecutionTime: null,
-        lastExecutionEndTime: null,
-        lastExecutionMetadata: null,
-        previousExecutionTimes: [],
-      };
+      history = [];
       this._history.cells.set(cellId, history);
     }
     return history;
@@ -568,19 +569,18 @@ export default class ExecuteTimeWidget extends Widget {
       return;
     }
 
-    if (history.lastExecutionTime) {
+    if (history[0]) {
       executionTimeNode.setAttribute(
         PREV_DATA_EXECUTION_TIME_ATTR,
-        history.lastExecutionTime,
+        history[0].duration,
       );
     } else {
       executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
     }
 
-    const previousExecutionTimes = history.previousExecutionTimes.slice(
-      0,
-      this._settings.historyCount,
-    );
+    const previousExecutionTimes = history
+      .slice(1, this._settings.historyCount + 1)
+      .map((run) => run.duration);
     if (this._settings.historyCount > 0 && previousExecutionTimes.length > 0) {
       const tooltip = `${TOOLTIP_PREFIX}\n${previousExecutionTimes.join('\n')}`;
       executionTimeNode.setAttribute('title', tooltip);

@@ -101,6 +101,76 @@ test.describe('Execution history', () => {
     );
   });
 
+  test('Restoring saved metadata does not record an execution twice', async ({
+    page,
+  }) => {
+    await recordExecution(page, 1, 1, 100);
+    await recordExecution(page, 1, 2, 200);
+    await page.notebook.save();
+    await recordExecution(page, 1, 3, 300);
+    const previousRuns = await (
+      await timingWidget(page, 1)
+    ).getAttribute('title');
+
+    await page.evaluate(async (pluginId) => {
+      const tracker = await window.galata.getPlugin(pluginId);
+      await tracker.currentWidget.context.revert();
+    }, NOTEBOOK_ID);
+    await expect(await timingWidget(page, 1)).toContainText('200ms');
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      previousRuns!,
+    );
+
+    await recordExecution(page, 1, 4, 400);
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n300ms\n200ms\n100ms',
+    );
+  });
+
+  test('Notebook copies retain history when the source runs before opening', async ({
+    page,
+    tmpPath,
+  }) => {
+    await recordExecution(page, 1, 1, 100);
+    await recordExecution(page, 1, 2, 200);
+    const previousRuns = await (
+      await timingWidget(page, 1)
+    ).getAttribute('title');
+    await page.notebook.save();
+    const copy = await page.evaluate(async (tmpPath) => {
+      const result = await window.jupyterapp.serviceManager.contents.copy(
+        `${tmpPath}/Simple_notebook.ipynb`,
+        tmpPath,
+      );
+      return { path: result.path, name: result.name };
+    }, tmpPath);
+
+    await recordExecution(page, 1, 3, 300);
+    await page.notebook.openByPath(copy.path);
+    await page.notebook.activate(copy.name);
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      previousRuns!,
+    );
+
+    await recordExecution(page, 1, 4, 400);
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n200ms\n100ms',
+    );
+    await page.notebook.activate('Simple_notebook.ipynb');
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'data-prev-execution-time',
+      '300ms',
+    );
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n200ms\n100ms',
+    );
+  });
+
   for (const sameExecution of [true, false]) {
     test(`Notebook copies keep independent histories (matching execution: ${sameExecution})`, async ({
       page,
