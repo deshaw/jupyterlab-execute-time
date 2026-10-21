@@ -73,7 +73,7 @@ test.describe('Cell operations', () => {
     await expect(
       page
         .locator('.jp-Cell[data-windowed-list-index="1"]')
-        .locator('.execute-time')
+        .locator('.execute-time'),
     ).toHaveCount(0);
 
     await page.notebook.setCellType(1, 'code');

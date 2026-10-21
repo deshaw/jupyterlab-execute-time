@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "hatchling",
-    "jupyterlab~=4.0.0",
+    "hatchling>=1.5.0",
+    "jupyter-builder>=1.2.0,<2",
     "hatch-nodejs-version>=0.3.2",
 ]
 build-backend = "hatchling.build"
@@ -10,7 +10,9 @@ build-backend = "hatchling.build"
 name = "jupyterlab-execute-time"
 description = "Display cell timings in Jupyter Lab"
 readme = "README.md"
-requires-python = ">=3.7"
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.10"
 authors = [
     { name = "Marc Udoff" },
 ]
@@ -25,22 +27,24 @@ classifiers = [
     "Framework :: Jupyter :: JupyterLab :: 4",
     "Framework :: Jupyter :: JupyterLab :: Extensions",
     "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "jupyterlab>=4,<5",
 ]
 dynamic = ["version"]
 
-[project.license]
-file = "LICENSE.txt"
+[project.optional-dependencies]
+dev = [
+    "jupyterlab>=4,<5",
+    "jupyter-builder>=1.2.0,<2",
+]
 
 [project.urls]
 Homepage = "https://github.com/deshaw/jupyterlab-execute-time"

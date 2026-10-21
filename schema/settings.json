@@ -21,7 +21,20 @@
       "title": "Positioning",
       "description": "How to position the execution time. Possible values are: \"left\", \"right\" or \"hover\".",
       "default": "left",
-      "enum": ["left", "right", "hover"]
+      "oneOf": [
+        {
+          "const": "left",
+          "title": "Left"
+        },
+        {
+          "const": "right",
+          "title": "Right"
+        },
+        {
+          "const": "hover",
+          "title": "Hover"
+        }
+      ]
     },
     "minTime": {
       "type": "number",
@@ -34,7 +47,16 @@
       "title": "Text Contrast",
       "description": "Text color contrast. Possible values are: \"high\", \"low\".",
       "default": "high",
-      "enum": ["high", "low"]
+      "oneOf": [
+        {
+          "const": "high",
+          "title": "High"
+        },
+        {
+          "const": "low",
+          "title": "Low"
+        }
+      ]
     },
     "showLiveExecutionTime": {
       "type": "boolean",

@@ -8,7 +8,7 @@ export function openNotebook(fileName: string) {
   return async ({ page, tmpPath }) => {
     await page.contents.uploadFile(
       path.resolve(__dirname, `../notebooks/${fileName}`),
-      `${tmpPath}/${fileName}`
+      `${tmpPath}/${fileName}`,
     );
     await page.notebook.openByPath(`${tmpPath}/${fileName}`);
     await page.notebook.activate(fileName);
@@ -28,7 +28,7 @@ export async function cleanup({ page, tmpPath }) {
 export async function acceptDialog(page: Page, title: string) {
   const dialog = await page.waitForSelector(`.jp-Dialog:has-text("${title}")`);
   const button = await dialog.waitForSelector(
-    '.jp-Dialog-button.jp-mod-accept'
+    '.jp-Dialog-button.jp-mod-accept',
   );
   await button.click();
   await dialog.waitForElementState('hidden');
@@ -40,7 +40,7 @@ export async function acceptDialog(page: Page, title: string) {
  * snapshot while the live execution timer is ticking.
  */
 export async function maskedScreenshot(
-  widget: ElementHandle<HTMLElement | SVGElement>
+  widget: ElementHandle<HTMLElement | SVGElement>,
 ) {
   // Clone the widget node and mask the digits.
   const masked = (await widget.evaluateHandle(async (original) => {
@@ -76,7 +76,7 @@ interface ITimeWatchingOptions {
  */
 export async function watchTimeIncrease(
   cell: Locator,
-  options: ITimeWatchingOptions
+  options: ITimeWatchingOptions,
 ): Promise<boolean> {
   return cell.evaluate<Promise<boolean>, ITimeWatchingOptions, HTMLElement>(
     async (cellNode: HTMLElement, options: ITimeWatchingOptions) => {
@@ -102,7 +102,7 @@ export async function watchTimeIncrease(
             } else {
               observer.disconnect();
               return reject(
-                `Only ${updatesCount} updates seen, expected at least ${options.minimumTicks}`
+                `Only ${updatesCount} updates seen, expected at least ${options.minimumTicks}`,
               );
             }
           } else {
@@ -115,13 +115,13 @@ export async function watchTimeIncrease(
             if (isNaN(milliseconds)) {
               observer.disconnect();
               return reject(
-                `Could not parse seconds nor milliseconds from ${node.innerText}`
+                `Could not parse seconds nor milliseconds from ${node.innerText}`,
               );
             }
             if (lastTimeMs > milliseconds) {
               observer.disconnect();
               return reject(
-                `Non-increasing time delta seen, from ${lastTimeMs}ms to ${milliseconds}ms in ${updatesCount} update`
+                `Non-increasing time delta seen, from ${lastTimeMs}ms to ${milliseconds}ms in ${updatesCount} update`,
               );
             }
             lastTimeMs = milliseconds;
@@ -141,13 +141,13 @@ export async function watchTimeIncrease(
             reject(
               `Timeout of ${options.timeout}ms exceeded with ${
                 updatesCount - 1
-              } updates processed`
+              } updates processed`,
             ),
-          options.timeout
-        )
+          options.timeout,
+        ),
       );
       return Promise.race([completedPromise, timeoutPromise]);
     },
-    options
+    options,
   );
 }

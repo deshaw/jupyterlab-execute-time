@@ -20,7 +20,7 @@ class ExecuteTimeWidgetExtension implements DocumentRegistry.WidgetExtension {
   // We get a notebook panel because of addWidgetExtension('Notebook', ...) below
   createNew(
     panel: NotebookPanel,
-    context: DocumentRegistry.IContext<INotebookModel>
+    context: DocumentRegistry.IContext<INotebookModel>,
   ) {
     return new ExecuteTimeWidget(panel, this._tracker, this._settings);
   }
@@ -34,12 +34,13 @@ class ExecuteTimeWidgetExtension implements DocumentRegistry.WidgetExtension {
  */
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_NAME,
+  description: 'Display cell execution timings in JupyterLab notebooks',
   autoStart: true,
   requires: [INotebookTracker, ISettingRegistry],
   activate: async (
     app: JupyterFrontEnd,
     tracker: INotebookTracker,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
   ) => {
     const pluginId = `${PLUGIN_NAME}:settings`;
 
@@ -56,7 +57,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         // `Etc/UTC`). Prepend it ourselves and dedupe so the most common
         // choice is always selectable.
         const zones = Array.from(
-          new Set(['UTC', ...Intl.supportedValuesOf('timeZone')])
+          new Set(['UTC', ...Intl.supportedValuesOf('timeZone')]),
         ).sort();
         const properties = plugin.schema.properties ?? {};
         properties.timezone = {
@@ -80,7 +81,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       settings = await settingRegistry.load(pluginId);
     } catch (err: unknown) {
       console.error(
-        `jupyterlab-execute-time: Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`
+        `jupyterlab-execute-time: Could not load settings, so did not active ${PLUGIN_NAME}: ${err}`,
       );
       return;
     }
@@ -93,18 +94,17 @@ const extension: JupyterFrontEndPlugin<void> = {
           nbSettings.set('recordTiming', true),
         (err: Error) => {
           console.error(
-            `jupyterlab-execute-time: Could not force metadata recording: ${err}`
+            `jupyterlab-execute-time: Could not force metadata recording: ${err}`,
           );
-        }
+        },
       );
     }
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new ExecuteTimeWidgetExtension(tracker, settings)
+      new ExecuteTimeWidgetExtension(tracker, settings),
     );
 
-    // eslint-disable-next-line no-console
     console.log('JupyterLab extension jupyterlab-execute-time is activated!');
   },
 };

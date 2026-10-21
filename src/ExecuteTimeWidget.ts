@@ -52,18 +52,17 @@ export default class ExecuteTimeWidget extends Widget {
   constructor(
     panel: NotebookPanel,
     tracker: INotebookTracker,
-    settings: ISettingRegistry.ISettings
+    settings: ISettingRegistry.ISettings,
   ) {
     super();
     this._panel = panel;
     this._tracker = tracker;
     this._settingsRegistry = settings;
-    this._settingsChanged = this._updateSettings.bind(this);
 
     this.updateConnectedCell = this.updateConnectedCell.bind(this);
 
     this._updateSettings(settings);
-    settings.changed.connect(this._settingsChanged);
+    settings.changed.connect(this._updateSettings, this);
   }
 
   dispose() {
@@ -71,7 +70,7 @@ export default class ExecuteTimeWidget extends Widget {
       return;
     }
 
-    this._settingsRegistry.changed.disconnect(this._settingsChanged);
+    this._settingsRegistry.changed.disconnect(this._updateSettings, this);
 
     // Disconnect notebook and per-cell listeners before releasing history refs.
     const cells = this._panel.context.model.cells;
@@ -88,7 +87,7 @@ export default class ExecuteTimeWidget extends Widget {
    */
   updateConnectedCell(
     sender: CellList,
-    changed: IObservableList.IChangedArgs<ICellModel>
+    changed: IObservableList.IChangedArgs<ICellModel>,
   ) {
     // When a cell is moved it's model gets re-created so we need to update
     // the `metadataChanged` listeners.
@@ -120,7 +119,7 @@ export default class ExecuteTimeWidget extends Widget {
       // Register signal handler with `cellModel` stored in closure.
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
-      cellModel.metadataChanged.connect(fn);
+      cellModel.metadataChanged.connect(fn, this);
 
       // Copy cell model identifier and store a reference to `metadataChanged`
       // signal to keep them available even during cell model disposal.
@@ -131,10 +130,10 @@ export default class ExecuteTimeWidget extends Widget {
       // see the explanation in `updateConnectedCell()` method.
       const deregisterOnDisposal = () => {
         this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
-        cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal);
+        cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal, this);
       };
       this._cellDisposedSlotMap[cellModel.id] = deregisterOnDisposal;
-      cellModel.sharedModel.disposed.connect(deregisterOnDisposal);
+      cellModel.sharedModel.disposed.connect(deregisterOnDisposal, this);
     }
     // Always re-render cells.
     // In case there was already metadata: do not highlight on first load.
@@ -145,12 +144,12 @@ export default class ExecuteTimeWidget extends Widget {
     if (cellModel !== undefined) {
       const fn = this._cellSlotMap[cellModel.id];
       if (fn) {
-        cellModel.metadataChanged.disconnect(fn);
+        cellModel.metadataChanged.disconnect(fn, this);
         const disposedFn = this._cellDisposedSlotMap[cellModel.id];
         if (disposedFn) {
           // The shared model can outlive this widget, so remove its cleanup hook too.
           if (cellModel.sharedModel) {
-            cellModel.sharedModel.disposed.disconnect(disposedFn);
+            cellModel.sharedModel.disposed.disconnect(disposedFn, this);
           }
           delete this._cellDisposedSlotMap[cellModel.id];
         }
@@ -185,7 +184,7 @@ export default class ExecuteTimeWidget extends Widget {
   _getCodeCell(cellModel: ICellModel): CodeCell | null {
     if (cellModel.type === 'code') {
       const cell = this._panel.content.widgets.find(
-        (widget: Cell) => widget.model === cellModel
+        (widget: Cell) => widget.model === cellModel,
       );
       return cell as CodeCell;
     }
@@ -251,7 +250,7 @@ export default class ExecuteTimeWidget extends Widget {
         return;
       }
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
-        `.${EXECUTE_TIME_CLASS}`
+        `.${EXECUTE_TIME_CLASS}`,
       );
 
       const parentNode =
@@ -298,7 +297,7 @@ export default class ExecuteTimeWidget extends Widget {
           break;
         default:
           console.error(
-            `'${positioning}' is not a valid type for the setting 'positioning'`
+            `'${positioning}' is not a valid type for the setting 'positioning'`,
           );
       }
       const positioningClass = `${EXECUTE_TIME_CLASS}-positioning-${this._settings.positioning}`;
@@ -310,8 +309,7 @@ export default class ExecuteTimeWidget extends Widget {
       // A cell is running when the kernel has started executing
       // A cell is done when the execute_reply has has finished
       const queuedTimeStr = executionMetadata['iopub.status.busy'] as
-        | string
-        | null;
+        string | null;
       const queuedTime = queuedTimeStr ? new Date(queuedTimeStr) : null;
       const startTimeStr = (executionMetadata['shell.execute_reply.started'] ||
         executionMetadata['iopub.execute_input']) as string | null;
@@ -337,7 +335,7 @@ export default class ExecuteTimeWidget extends Widget {
       } else if (endTime) {
         const executionTimeMillis = differenceInMilliseconds(
           endTime,
-          startTime
+          startTime,
         );
         if (this._settings.minTime <= executionTimeMillis / 1000.0) {
           const executionTime = getTimeDiff(endTime, startTime);
@@ -360,7 +358,7 @@ export default class ExecuteTimeWidget extends Widget {
             msg += ` at ${getTimeString(
               endTime,
               this._settings.dateFormat,
-              this._settings.timezone
+              this._settings.timezone,
             )}`;
           }
           msg += ` in ${executionTime}`;
@@ -380,8 +378,9 @@ export default class ExecuteTimeWidget extends Widget {
           const lastRunTime = history?.lastExecutionTime;
           const workingTimer = setInterval(() => {
             if (
+              cell.isDisposed ||
               !executionTimeNode.children[0].textContent.startsWith(
-                'Execution started at'
+                'Execution started at',
               )
             ) {
               clearInterval(workingTimer);
@@ -389,7 +388,7 @@ export default class ExecuteTimeWidget extends Widget {
             }
 
             const executionMetadata = cell.model.getMetadata(
-              'execution'
+              'execution',
             ) as JSONObject;
             if (!executionMetadata || executionMetadata['execution_failed']) {
               // (if cell got re-scheduled the metadata will be empty too)
@@ -412,7 +411,7 @@ export default class ExecuteTimeWidget extends Widget {
         msg = `Execution started at ${getTimeString(
           startTime,
           this._settings.dateFormat,
-          this._settings.timezone
+          this._settings.timezone,
         )}`;
       } else if (queuedTime) {
         const history = executionTimeHistory.get(cell.model.id);
@@ -424,7 +423,7 @@ export default class ExecuteTimeWidget extends Widget {
         msg = `Execution queued at ${getTimeString(
           queuedTime,
           this._settings.dateFormat,
-          this._settings.timezone
+          this._settings.timezone,
         )}`;
       }
       if (executionTimeNode.textContent !== msg) {
@@ -434,14 +433,14 @@ export default class ExecuteTimeWidget extends Widget {
           executionTimeNode.style.setProperty('animation', ANIMATE_CSS);
           setTimeout(
             () => executionTimeNode.style.removeProperty('animation'),
-            ANIMATE_TIME_MS
+            ANIMATE_TIME_MS,
           );
         }
       }
     } else {
       // Hide it if data was removed (e.g. clear output).
       const executionTimeNode = cell.node.querySelector(
-        `.${EXECUTE_TIME_CLASS}`
+        `.${EXECUTE_TIME_CLASS}`,
       );
       if (executionTimeNode) {
         executionTimeNode.classList.add('execute-time-hidden');
@@ -470,7 +469,7 @@ export default class ExecuteTimeWidget extends Widget {
    */
   private _renderExecutionTimeHistory(
     cellId: string,
-    executionTimeNode: HTMLDivElement
+    executionTimeNode: HTMLDivElement,
   ) {
     const history = executionTimeHistory.get(cellId);
     if (!history) {
@@ -482,7 +481,7 @@ export default class ExecuteTimeWidget extends Widget {
     if (history.lastExecutionTime) {
       executionTimeNode.setAttribute(
         PREV_DATA_EXECUTION_TIME_ATTR,
-        history.lastExecutionTime
+        history.lastExecutionTime,
       );
     } else {
       executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
@@ -490,7 +489,7 @@ export default class ExecuteTimeWidget extends Widget {
 
     const previousExecutionTimes = history.previousExecutionTimes.slice(
       0,
-      this._settings.historyCount
+      this._settings.historyCount,
     );
     if (this._settings.historyCount > 0 && previousExecutionTimes.length > 0) {
       const tooltip = `${TOOLTIP_PREFIX}\n${previousExecutionTimes.join('\n')}`;
@@ -511,7 +510,7 @@ export default class ExecuteTimeWidget extends Widget {
     }
     executionTimeHistoryReferences.set(
       cellId,
-      (executionTimeHistoryReferences.get(cellId) ?? 0) + 1
+      (executionTimeHistoryReferences.get(cellId) ?? 0) + 1,
     );
   }
 
@@ -560,7 +559,7 @@ export default class ExecuteTimeWidget extends Widget {
       // warn user once
       void showErrorMessage(
         'Invalid date format in Execute Time extension setting',
-        formatValidationResult.message
+        formatValidationResult.message,
       );
     }
 
@@ -589,7 +588,7 @@ export default class ExecuteTimeWidget extends Widget {
    */
   private _cellInViewport(
     cell: CodeCell,
-    updateNumber: number
+    updateNumber: number,
   ): Promise<boolean> {
     return new Promise<boolean>((resolved) => {
       const clearHandlers = () => {
@@ -646,7 +645,6 @@ export default class ExecuteTimeWidget extends Widget {
   private _tracker: INotebookTracker;
   private _panel: NotebookPanel;
   private _settingsRegistry: ISettingRegistry.ISettings;
-  private _settingsChanged: (settings: ISettingRegistry.ISettings) => void;
   private _settings: IExecuteTimeSettings = {
     enabled: false,
     highlight: true,

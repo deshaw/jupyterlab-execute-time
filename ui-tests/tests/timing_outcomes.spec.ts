@@ -25,8 +25,10 @@ test.describe('Timing outcomes', () => {
 
     const widget = await cell.waitForSelector('.execute-time');
     expect(await widget.textContent()).toContain('Execution started at');
+    // The live timer appears on its first interval tick after the status text.
+    await expect.poll(() => widget.textContent()).toMatch(/\d+ms/);
     expect(await maskedScreenshot(widget)).toMatchSnapshot(
-      'execution-started.png'
+      'execution-started.png',
     );
   });
 

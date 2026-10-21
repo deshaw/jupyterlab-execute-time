@@ -15,35 +15,32 @@ test.describe('Windowed notebook', () => {
       },
     },
   });
-  test.describe.configure({ retries: 4 });
   test.beforeEach(openNotebook(fileName));
   test.afterEach(cleanup);
 
-  test('Node attaches after scrolling into view', async ({ page, tmpPath }) => {
-    // Run all cells; this will scroll us to the end
-    await page.notebook.run();
-    // Select first cell
-    await page.notebook.selectCells(0);
-    await page.notebook.save();
-    // Reopen the notebook to unload the widgets attached during execution
-    await page.notebook.close(false);
-    await page.notebook.openByPath(`${tmpPath}/${fileName}`);
-    await page.notebook.activate(fileName);
-    // Wait for the notebook state to settle
-    await page.waitForTimeout(100);
+  test('Node attaches after scrolling into view', async ({ page }) => {
+    // The fixture already contains execution metadata; wait for the first widget.
+    const firstCellLocator = page.locator(
+      '.jp-Cell[data-windowed-list-index="1"]',
+    );
+    await expect(firstCellLocator.locator('.execute-time')).toContainText(
+      'Last executed at',
+    );
     // Check that only a fraction of cells have the widget
     expect(await page.locator('.execute-time').count()).toBeLessThan(50);
-    // Get the 100th cells locator without scrolling
-    const lastCellLocator = page.locator('.jp-Cell:last-child');
-    expect(await lastCellLocator.isHidden()).toBeTruthy();
+    // Target cell 100, not the last cell currently rendered by windowing.
+    const lastCellLocator = page.locator(
+      '.jp-Cell[data-windowed-list-index="100"]',
+    );
+    await expect(lastCellLocator).toBeHidden();
     const widgetLocator = lastCellLocator.locator('.execute-time');
-    expect(await widgetLocator.isHidden()).toBeTruthy();
+    await expect(widgetLocator).toBeHidden();
     // Scroll to the 100th cell
-    await page.notebook.getCell(100);
+    await page.notebook.getCellLocator(100);
     // The widget should be shown
-    expect(await widgetLocator.isHidden()).toBeFalsy();
+    await expect(widgetLocator).toBeVisible();
     // The widget should be in "executed" state
-    expect(await widgetLocator.textContent()).toContain('Last executed at');
+    await expect(widgetLocator).toContainText('Last executed at');
   });
 });
 
@@ -75,7 +72,7 @@ test.describe('Windowed notebook/hover', () => {
     await page.notebook.setCell(
       1,
       'code',
-      'from time import sleep\ndef f(i):\n    sleep(0.2)'
+      'from time import sleep\ndef f(i):\n    sleep(0.2)',
     );
     // Run cells
     await page.evaluate(async () => {
@@ -103,7 +100,7 @@ test.describe('Windowed notebook/hover', () => {
     // The number of visible widgets should be approximately equal the number of visible cells
     // If multiple nodes were attached, the count would be equal to `3 * visibleCells`.
     expect(await page.locator(`.execute-time`).count()).toBeLessThanOrEqual(
-      visibleCells + 5
+      visibleCells + 5,
     );
   });
 });
