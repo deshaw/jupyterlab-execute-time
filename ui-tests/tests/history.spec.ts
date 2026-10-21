@@ -126,6 +126,31 @@ test.describe('Execution history', () => {
     );
   });
 
+  test('New executions stay latest when the clock moves backwards', async ({
+    page,
+  }) => {
+    await page.evaluate(async (pluginId) => {
+      const settings = await window.galata.getPlugin(
+        '@jupyterlab/apputils-extension:settings',
+      );
+      await settings.set(pluginId, 'historyCount', 1);
+    }, SETTINGS_ID);
+
+    await recordExecution(page, 1, 3, 300);
+    await recordExecution(page, 1, 2, 200);
+    await recordExecution(page, 1, 1, 100);
+    await rerender(page);
+
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'data-prev-execution-time',
+      '100ms',
+    );
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n200ms',
+    );
+  });
+
   test('Restoring an evicted run preserves the latest execution history', async ({
     page,
   }) => {
@@ -145,6 +170,13 @@ test.describe('Execution history', () => {
       await tracker.currentWidget.context.revert();
     }, NOTEBOOK_ID);
     await expect(await timingWidget(page, 1)).toContainText('100ms');
+    // An unrelated metadata update must not turn the restored run into a new one.
+    await page.evaluate(async (pluginId) => {
+      const tracker = await window.galata.getPlugin(pluginId);
+      tracker.currentWidget.content.model.cells
+        .get(1)
+        .setMetadata('tags', ['restored']);
+    }, NOTEBOOK_ID);
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'data-prev-execution-time',
       '300ms',

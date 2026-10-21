@@ -30,6 +30,10 @@ interface IExecutionTime {
   metadata: JSONObject;
 }
 
+type MetadataChangedSlot = Parameters<
+  ICellModel['metadataChanged']['connect']
+>[0];
+
 interface INotebookExecutionHistory {
   path: string;
   views: number;
@@ -151,7 +155,8 @@ export default class ExecuteTimeWidget extends Widget {
       this._retainExecutionHistory(cellModel.id);
       this._copyExecutionTimeHistory(cellModel);
       // Register signal handler with `cellModel` stored in closure.
-      const fn = () => this._cellMetadataChanged(cellModel);
+      const fn: MetadataChangedSlot = (_sender, change) =>
+        this._cellMetadataChanged(cellModel, false, change.key === 'execution');
       this._cellSlotMap[cellModel.id] = fn;
       cellModel.metadataChanged.connect(fn, this);
 
@@ -197,10 +202,16 @@ export default class ExecuteTimeWidget extends Widget {
     }
   }
 
-  _cellMetadataChanged(cellModel: ICellModel, disableHighlight = false) {
+  _cellMetadataChanged(
+    cellModel: ICellModel,
+    disableHighlight = false,
+    recordExecution = false,
+  ) {
     const codeCell = this._getCodeCell(cellModel);
     if (codeCell) {
-      this._updateCodeCell(codeCell, disableHighlight).catch(console.error);
+      this._updateCodeCell(codeCell, disableHighlight, recordExecution).catch(
+        console.error,
+      );
     } else {
       if (cellModel.type === 'code') {
         console.error(`Could not find code cell for model: ${cellModel}`);
@@ -263,7 +274,11 @@ export default class ExecuteTimeWidget extends Widget {
    * @param cell
    * @private
    */
-  async _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
+  async _updateCodeCell(
+    cell: CodeCell,
+    disableHighlight: boolean,
+    recordExecution = false,
+  ) {
     // First update and store current update number.
     const updateNumber = this._increaseUpdateCounter(cell);
     // Cells don't have inputArea attributes until they are ready; wait for this.
@@ -388,11 +403,13 @@ export default class ExecuteTimeWidget extends Widget {
             metadata: JSONExt.deepCopy(executionMetadata),
           };
           if (recordedIndex === -1) {
-            // Restored metadata may predate every retained run. Insert by time
-            // so it cannot displace newer executions when history is trimmed.
-            const olderIndex = history.findIndex(
-              (recorded) => new Date(recorded.endTime) < endTime,
-            );
+            // New executions follow observation order, even if clocks differ.
+            // Sort restored metadata by time so it cannot evict newer runs.
+            const olderIndex = recordExecution
+              ? 0
+              : history.findIndex(
+                  (recorded) => new Date(recorded.endTime) < endTime,
+                );
             history.splice(
               olderIndex === -1 ? history.length : olderIndex,
               0,
@@ -751,7 +768,7 @@ export default class ExecuteTimeWidget extends Widget {
    */
   private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
   private _cellSlotMap: {
-    [id: string]: () => void;
+    [id: string]: MetadataChangedSlot;
   } = {};
   private _cellDisposedSlotMap: {
     [id: string]: () => void;
