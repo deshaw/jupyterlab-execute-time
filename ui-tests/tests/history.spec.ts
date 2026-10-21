@@ -108,9 +108,6 @@ test.describe('Execution history', () => {
     await recordExecution(page, 1, 2, 200);
     await page.notebook.save();
     await recordExecution(page, 1, 3, 300);
-    const previousRuns = await (
-      await timingWidget(page, 1)
-    ).getAttribute('title');
 
     await page.evaluate(async (pluginId) => {
       const tracker = await window.galata.getPlugin(pluginId);
@@ -119,13 +116,48 @@ test.describe('Execution history', () => {
     await expect(await timingWidget(page, 1)).toContainText('200ms');
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
-      previousRuns!,
+      'Previous Runs:\n300ms\n100ms',
     );
 
     await recordExecution(page, 1, 4, 400);
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
       'Previous Runs:\n300ms\n200ms\n100ms',
+    );
+  });
+
+  test('Restoring an evicted run preserves the latest execution history', async ({
+    page,
+  }) => {
+    await page.evaluate(async (pluginId) => {
+      const settings = await window.galata.getPlugin(
+        '@jupyterlab/apputils-extension:settings',
+      );
+      await settings.set(pluginId, 'historyCount', 1);
+    }, SETTINGS_ID);
+    await recordExecution(page, 1, 1, 100);
+    await page.notebook.save();
+    await recordExecution(page, 1, 2, 200);
+    await recordExecution(page, 1, 3, 300);
+
+    await page.evaluate(async (pluginId) => {
+      const tracker = await window.galata.getPlugin(pluginId);
+      await tracker.currentWidget.context.revert();
+    }, NOTEBOOK_ID);
+    await expect(await timingWidget(page, 1)).toContainText('100ms');
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'data-prev-execution-time',
+      '300ms',
+    );
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n300ms',
+    );
+
+    await recordExecution(page, 1, 4, 400);
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n300ms',
     );
   });
 

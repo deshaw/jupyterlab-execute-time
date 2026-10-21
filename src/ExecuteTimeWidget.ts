@@ -308,7 +308,6 @@ export default class ExecuteTimeWidget extends Widget {
         executionTimeNode.remove();
         parentNode.append(executionTimeNode);
       }
-      this._renderExecutionTimeHistory(cell.model.id, executionTimeNode);
       // Ensure that the current cell onclick actives the current cell
       executionTimeNode.onclick = () => {
         // This check makes sure that range selections (mostly) work
@@ -363,6 +362,11 @@ export default class ExecuteTimeWidget extends Widget {
       const isLikelyAborted =
         endTimeStr && !executionMetadata['iopub.execute_input'];
 
+      this._renderExecutionTimeHistory(
+        cell.model.id,
+        executionTimeNode,
+        endTimeStr,
+      );
       let msg = '';
       if (isLikelyAborted) {
         msg = '';
@@ -384,14 +388,27 @@ export default class ExecuteTimeWidget extends Widget {
             metadata: JSONExt.deepCopy(executionMetadata),
           };
           if (recordedIndex === -1) {
-            history.unshift(run);
+            // Restored metadata may predate every retained run. Insert by time
+            // so it cannot displace newer executions when history is trimmed.
+            const olderIndex = history.findIndex(
+              (recorded) => new Date(recorded.endTime) < endTime,
+            );
+            history.splice(
+              olderIndex === -1 ? history.length : olderIndex,
+              0,
+              run,
+            );
             history.splice(Math.max(0, this._settings.historyCount) + 1);
           } else {
             // Restoring saved metadata must not record the same run again.
             // Replace records so notebook copies can safely share older ones.
             history[recordedIndex] = run;
           }
-          this._renderExecutionTimeHistory(cell.model.id, executionTimeNode);
+          this._renderExecutionTimeHistory(
+            cell.model.id,
+            executionTimeNode,
+            endTimeStr,
+          );
           executionTimeNode.children[2].textContent = '';
 
           msg = failed ? 'Failed' : 'Last executed';
@@ -561,6 +578,7 @@ export default class ExecuteTimeWidget extends Widget {
   private _renderExecutionTimeHistory(
     cellId: string,
     executionTimeNode: HTMLDivElement,
+    displayedEndTime: string | null,
   ) {
     const history = this._history.cells.get(cellId);
     if (!history) {
@@ -578,8 +596,11 @@ export default class ExecuteTimeWidget extends Widget {
       executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
     }
 
+    // While running, the latest duration is already displayed beside the timer.
+    const displayedRun = displayedEndTime ?? history[0]?.endTime;
     const previousExecutionTimes = history
-      .slice(1, this._settings.historyCount + 1)
+      .filter((run) => run.endTime !== displayedRun)
+      .slice(0, this._settings.historyCount)
       .map((run) => run.duration);
     if (this._settings.historyCount > 0 && previousExecutionTimes.length > 0) {
       const tooltip = `${TOOLTIP_PREFIX}\n${previousExecutionTimes.join('\n')}`;
