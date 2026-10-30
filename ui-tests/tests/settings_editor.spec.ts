@@ -6,7 +6,7 @@ test.describe('Settings Editor', () => {
       await window.jupyterapp.commands.execute('settingeditor:open');
     });
     const plugin = page.locator(
-      '.jp-PluginList .jp-PluginList-entry >> text="Execute Time"'
+      '.jp-PluginList .jp-PluginList-entry >> text="Execute Time"',
     );
 
     await plugin.waitFor();

@@ -3,4 +3,5 @@ node_modules
 **/lib
 **/package.json
 jupyterlab_execute_time
+eslint.config.mjs
 .venv

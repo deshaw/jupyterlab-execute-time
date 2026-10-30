@@ -21,11 +21,11 @@ async function openNotebook(page: IJupyterLabPageFixture, path: string) {
 
 async function openSimpleNotebook(
   page: IJupyterLabPageFixture,
-  tmpPath: string
+  tmpPath: string,
 ) {
   await page.contents.uploadFile(
     path.resolve(__dirname, '../notebooks/Simple_notebook.ipynb'),
-    `${tmpPath}/Simple_notebook.ipynb`
+    `${tmpPath}/Simple_notebook.ipynb`,
   );
   await openNotebook(page, `${tmpPath}/Simple_notebook.ipynb`);
 }
@@ -108,17 +108,17 @@ for (const showLiveExecutionTime of [true, false]) {
               })),
             }),
             'text',
-            `${tmpPath}/${fileName}`
+            `${tmpPath}/${fileName}`,
           );
           await openNotebook(page, `${tmpPath}/${fileName}`);
 
           // Completed and failed timings must still render on idle cells.
           const cells = page.locator('.jp-CodeCell');
           await expect(cells.nth(2).locator('.execute-time')).toContainText(
-            'Last executed'
+            'Last executed',
           );
           await expect(cells.nth(3).locator('.execute-time')).toContainText(
-            'Failed'
+            'Failed',
           );
           // Neither start-time field should start a timer on an idle cell.
           await expect(cells.nth(0).locator('.execute-time')).toHaveCount(0);
@@ -130,9 +130,9 @@ for (const showLiveExecutionTime of [true, false]) {
               const panel = window.jupyterapp.shell
                 .currentWidget as NotebookPanel;
               return panel.content.widgets.map((cell) =>
-                cell.model.getMetadata('execution')
+                cell.model.getMetadata('execution'),
               );
-            })
+            }),
           ).toEqual(executions);
         });
       }
@@ -188,7 +188,7 @@ for (const showLiveExecutionTime of [true, false]) {
       await expect(widget).toContainText('Last executed');
       await expect(widget.locator('span').nth(1)).toBeEmpty();
       const previousTime = await widget.getAttribute(
-        'data-prev-execution-time'
+        'data-prev-execution-time',
       );
 
       // Real executions must still show live timing and finish normally.
@@ -196,7 +196,7 @@ for (const showLiveExecutionTime of [true, false]) {
         const panel = window.jupyterapp.shell.currentWidget as NotebookPanel;
         panel.content.activeCellIndex = 0;
         panel.content.widgets[0].model.sharedModel.setSource(
-          'import time\ntime.sleep(1)'
+          'import time\ntime.sleep(1)',
         );
         await panel.sessionContext.ready;
         await window.jupyterapp.commands.execute('notebook:run-cell');
@@ -208,7 +208,7 @@ for (const showLiveExecutionTime of [true, false]) {
       await execution;
       await expect(widget).toContainText('Last executed');
       expect((await widget.getAttribute('title')).split('\n')[1]).toBe(
-        previousTime
+        previousTime,
       );
     });
 
@@ -246,18 +246,18 @@ for (const showLiveExecutionTime of [true, false]) {
                       key === 'iopub.status.busy'
                         ? start
                         : end,
-                    ])
+                    ]),
                 ),
               },
-            }))
+            })),
           );
         },
-        { start: START, end: END }
+        { start: START, end: END },
       );
       const cells = page.locator('.jp-CodeCell');
       await expect(cells).toHaveCount(67);
       await expect(cells.nth(63).locator('.execute-time')).toContainText(
-        'Failed'
+        'Failed',
       );
       await expect(page.locator('.execute-time')).not.toContainText([
         'Execution started at',
@@ -275,7 +275,7 @@ for (const showLiveExecutionTime of [true, false]) {
             [null, ''].flatMap((end) => [
               { [startKey]: START, 'shell.execute_reply': end },
               { [startKey]: START, execution_failed: end },
-            ])
+            ]),
         ),
         {
           'iopub.execute_input': START,
@@ -303,21 +303,21 @@ for (const showLiveExecutionTime of [true, false]) {
             outputs: [],
             execution_count: null,
             metadata: { execution },
-          }))
+          })),
         );
       }, executions);
       const cells = page.locator('.jp-CodeCell');
       await expect(cells.nth(8).locator('.execute-time')).toContainText(
-        'Failed'
+        'Failed',
       );
       await expect(cells.nth(9).locator('.execute-time')).toContainText(
-        'Last executed'
+        'Last executed',
       );
       await expect(cells.nth(10).locator('.execute-time')).toContainText(
-        'Failed'
+        'Failed',
       );
       await expect(cells.nth(10).locator('.execute-time')).toContainText(
-        '1.00s'
+        '1.00s',
       );
       for (let index = 0; index < 8; index++) {
         await expect(cells.nth(index).locator('.execute-time')).toHaveCount(0);
@@ -459,7 +459,7 @@ for (const showLiveExecutionTime of [true, false]) {
         }) => {
           await page.contents.uploadFile(
             path.resolve(__dirname, '../notebooks/100_code_cells.ipynb'),
-            `${tmpPath}/100_code_cells.ipynb`
+            `${tmpPath}/100_code_cells.ipynb`,
           );
           await openNotebook(page, `${tmpPath}/100_code_cells.ipynb`);
           const widget = page
@@ -528,7 +528,7 @@ for (const showLiveExecutionTime of [true, false]) {
           const panel = window.jupyterapp.shell.currentWidget as NotebookPanel;
           panel.content.activeCellIndex = 0;
           panel.content.widgets[0].model.sharedModel.setSource(
-            'import time\ntime.sleep(3)'
+            'import time\ntime.sleep(3)',
           );
           await panel.sessionContext.ready;
           // Moving/deleting/closing a cell can dispose its execution future.
@@ -574,14 +574,14 @@ for (const showLiveExecutionTime of [true, false]) {
               const panel = window.jupyterapp.shell
                 .currentWidget as NotebookPanel;
               return panel.sessionContext.session?.kernel?.status;
-            })
+            }),
           )
           .toBe('idle');
         await execution;
         if (operation === 'delete, undo, and reopen') {
           await page.evaluate(async () => {
             await window.jupyterapp.commands.execute(
-              'notebook:undo-cell-action'
+              'notebook:undo-cell-action',
             );
           });
           // Some JupyterLab versions restore a stale running execution state.
@@ -613,7 +613,7 @@ for (const showLiveExecutionTime of [true, false]) {
           expect(state.execution['shell.execute_reply']).toBeUndefined();
         }
         await expect(
-          page.locator('.jp-CodeCell').nth(index).locator('.execute-time')
+          page.locator('.jp-CodeCell').nth(index).locator('.execute-time'),
         ).toHaveCount(0);
         expect(errors).toEqual([]);
       });
