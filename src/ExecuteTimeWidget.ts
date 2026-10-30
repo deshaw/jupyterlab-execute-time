@@ -52,6 +52,13 @@ export default class ExecuteTimeWidget extends Widget {
     settings.changed.connect(this._updateSettings.bind(this));
   }
 
+  dispose(): void {
+    for (const cell of this._executionTimers.keys()) {
+      this._clearExecutionTimer(cell);
+    }
+    super.dispose();
+  }
+
   /**
    * Handle `CellList.changed` signal.
    */
@@ -89,16 +96,21 @@ export default class ExecuteTimeWidget extends Widget {
       const fn = () => this._cellMetadataChanged(cellModel);
       this._cellSlotMap[cellModel.id] = fn;
       cellModel.metadataChanged.connect(fn);
+      cellModel.stateChanged.connect(this._cellStateChanged, this);
 
-      // Copy cell model identifier and store a reference to `metadataChanged`
-      // signal to keep them available even during cell model disposal.
+      // Keep the identifier and signals available during cell model disposal.
       const id = cellModel.id;
       const metadataChanged = cellModel.metadataChanged;
+      const stateChanged = cellModel.stateChanged;
 
       // Register a model disposal handler on the underlying shared model,
       // see the explanation in `updateConnectedCell()` method.
       const deregisterOnDisposal = () => {
-        this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
+        this._deregisterMetadataChanges({
+          metadataChanged,
+          stateChanged,
+          id,
+        } as ICellModel);
         cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal);
       };
       cellModel.sharedModel.disposed.connect(deregisterOnDisposal);
@@ -113,6 +125,7 @@ export default class ExecuteTimeWidget extends Widget {
       const fn = this._cellSlotMap[cellModel.id];
       if (fn) {
         cellModel.metadataChanged.disconnect(fn);
+        cellModel.stateChanged.disconnect(this._cellStateChanged, this);
         const codeCell = this._getCodeCell(cellModel);
         if (codeCell) {
           this._removeExecuteNode(codeCell);
@@ -131,6 +144,23 @@ export default class ExecuteTimeWidget extends Widget {
         console.error(`Could not find code cell for model: ${cellModel}`);
       }
     }
+  }
+
+  _cellStateChanged(cellModel: ICellModel, args: { name: string }) {
+    if (args.name !== 'executionState') {
+      return;
+    }
+    // Successful execution sets the cell idle before recording its reply.
+    // Wait for that metadata so we do not remove completed timing or history.
+    void Promise.resolve().then(() => {
+      if (this.isDisposed || this._panel.isDisposed) {
+        return;
+      }
+      const cell = this._getCodeCell(cellModel);
+      if (cell && !cell.isDisposed && this._isCellOrphaned(cell)) {
+        this._cellMetadataChanged(cellModel, true);
+      }
+    });
   }
 
   /**
@@ -156,15 +186,25 @@ export default class ExecuteTimeWidget extends Widget {
    * @private
    */
   _removeExecuteNode(cell: CodeCell) {
+    this._clearExecutionTimer(cell);
     const executionTimeNode = cell.node.querySelector(`.${EXECUTE_TIME_CLASS}`);
     if (executionTimeNode) {
       executionTimeNode.remove();
     }
   }
 
+  private _clearExecutionTimer(cell: CodeCell): void {
+    const timer = this._executionTimers.get(cell);
+    if (timer !== undefined) {
+      window.clearInterval(timer);
+      this._executionTimers.delete(cell);
+    }
+  }
+
   /**
    * Check if a cell is in an orphaned execution state.
-   * This typically happens when a cell is duplicated while running.
+   * This can happen when duplicating a running cell or loading incomplete
+   * execution metadata.
    * @param cell
    * @returns true if the cell is orphaned
    * @private
@@ -172,15 +212,19 @@ export default class ExecuteTimeWidget extends Widget {
   _isCellOrphaned(cell: CodeCell): boolean {
     const executionState = cell.model.executionState;
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
-    const hasExecuteInput = 'iopub.execute_input' in executionMetadata;
-    const hasReply = 'shell.execute_reply' in executionMetadata;
-    const hasFailed = 'execution_failed' in executionMetadata;
+    if (!executionMetadata || !JSONExt.isObject(executionMetadata)) {
+      return false;
+    }
+    const start =
+      executionMetadata['shell.execute_reply.started'] ||
+      executionMetadata['iopub.execute_input'];
+    const end =
+      executionMetadata['shell.execute_reply'] ||
+      executionMetadata['execution_failed'];
 
     // Cell is orphaned if it started executing but never completed
     // and will never receive a reply
-    return (
-      executionState === 'idle' && hasExecuteInput && !hasReply && !hasFailed
-    );
+    return executionState === 'idle' && !!start && !end;
   }
 
   /**
@@ -189,11 +233,15 @@ export default class ExecuteTimeWidget extends Widget {
    * @private
    */
   async _updateCodeCell(cell: CodeCell, disableHighlight: boolean) {
+    this._clearExecutionTimer(cell);
     // First update and store current update number.
     const updateNumber = this._increaseUpdateCounter(cell);
     // Cells don't have inputArea attributes until they are ready; wait for this.
     // Cells can be in the viewport but not yet ready when the `defer` mode is used.
     await cell.ready;
+    if (cell.isDisposed || this.isDisposed || this._panel.isDisposed) {
+      return;
+    }
     // Wait until the cell is in the viewport before querying for the node,
     // as otherwise it would not be found as contents are detached from DOM.
     if (!cell.inViewport) {
@@ -202,10 +250,20 @@ export default class ExecuteTimeWidget extends Widget {
         return;
       }
     }
+    // Only the latest pending update may render or start a live interval.
+    if (
+      cell.isDisposed ||
+      this.isDisposed ||
+      !this._settings.enabled ||
+      updateNumber !== this._updateCounter.get(cell)
+    ) {
+      return;
+    }
     const executionMetadata = cell.model.getMetadata('execution') as JSONObject;
     if (executionMetadata && JSONExt.isObject(executionMetadata)) {
       // Early exit if cell is in orphaned state
       if (this._isCellOrphaned(cell)) {
+        this._removeExecuteNode(cell);
         return;
       }
       let executionTimeNode: HTMLDivElement = cell.node.querySelector(
@@ -276,7 +334,7 @@ export default class ExecuteTimeWidget extends Widget {
       const startTime = startTimeStr ? new Date(startTimeStr) : null;
       // This is the time the kernel is done processing and starts replying
       const failed = executionMetadata['execution_failed'];
-      const endTimeStr = (executionMetadata['shell.execute_reply'] ??
+      const endTimeStr = (executionMetadata['shell.execute_reply'] ||
         failed) as string | null;
       const endTime = endTimeStr ? new Date(endTimeStr) : null;
       // shell.execute_reply can be one of:  One of: 'ok' OR 'error' OR 'aborted'
@@ -347,13 +405,16 @@ export default class ExecuteTimeWidget extends Widget {
           const lastRunTime = executionTimeNode.getAttribute(
             'data-prev-execution-time'
           );
-          const workingTimer = setInterval(() => {
+          const workingTimer = window.setInterval(() => {
             if (
+              cell.isDisposed ||
+              this.isDisposed ||
+              !this._settings.enabled ||
               !executionTimeNode.children[0].textContent.startsWith(
                 'Execution started at'
               )
             ) {
-              clearInterval(workingTimer);
+              this._clearExecutionTimer(cell);
               return;
             }
 
@@ -361,9 +422,12 @@ export default class ExecuteTimeWidget extends Widget {
               'execution'
             ) as JSONObject;
             if (!executionMetadata || executionMetadata['execution_failed']) {
-              // (if cell got re-scheduled the metadata will be empty too)
-              clearInterval(workingTimer);
-              return this._updateCodeCell(cell, disableHighlight);
+              // Stop if the execution was rescheduled or failed.
+              this._clearExecutionTimer(cell);
+              void this._updateCodeCell(cell, disableHighlight).catch(
+                console.error
+              );
+              return;
             }
 
             if (
@@ -377,6 +441,7 @@ export default class ExecuteTimeWidget extends Widget {
               }`;
             }
           }, 100);
+          this._executionTimers.set(cell, workingTimer);
         }
         msg = `Execution started at ${getTimeString(
           startTime,
@@ -521,6 +586,7 @@ export default class ExecuteTimeWidget extends Widget {
    * The counter of updates ever scheduled for each existing cell.
    */
   private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
+  private _executionTimers: Map<CodeCell, number> = new Map();
   private _cellSlotMap: {
     [id: string]: () => void;
   } = {};
