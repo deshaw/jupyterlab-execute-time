@@ -40,6 +40,28 @@ async function recordExecution(
   );
 }
 
+// Record more runs than the extension keeps for lookups by `execution` metadata.
+async function recordManyExecutions(
+  page: IJupyterLabPageFixture,
+  index: number,
+) {
+  await page.evaluate(
+    async ({ index, pluginId }) => {
+      const tracker = await window.galata.getPlugin(pluginId);
+      const cell = tracker.currentWidget.content.model.cells.get(index);
+      for (let run = 0; run < 2500; run++) {
+        const start = Date.UTC(2025, 0, 2, 0, 0, run);
+        cell.setMetadata('execution', {
+          'iopub.execute_input': new Date(start).toISOString(),
+          'shell.execute_reply.started': new Date(start).toISOString(),
+          'shell.execute_reply': new Date(start + 10).toISOString(),
+        });
+      }
+    },
+    { index, pluginId: NOTEBOOK_ID },
+  );
+}
+
 async function rerender(page: IJupyterLabPageFixture) {
   await page.evaluate(async (pluginId) => {
     const settings = await window.galata.getPlugin(
@@ -101,7 +123,7 @@ test.describe('Execution history', () => {
     );
   });
 
-  test('Restoring saved metadata does not record an execution twice', async ({
+  test('Reverting a notebook shows the runs before the restored run', async ({
     page,
   }) => {
     await recordExecution(page, 1, 1, 100);
@@ -116,13 +138,43 @@ test.describe('Execution history', () => {
     await expect(await timingWidget(page, 1)).toContainText('200ms');
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
-      'Previous Runs:\n300ms\n100ms',
+      'Previous Runs:\n100ms',
     );
 
     await recordExecution(page, 1, 4, 400);
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
-      'Previous Runs:\n300ms\n200ms\n100ms',
+      'Previous Runs:\n200ms\n100ms',
+    );
+  });
+
+  test('Reopening a notebook without saving shows the runs before the saved run', async ({
+    page,
+    tmpPath,
+  }) => {
+    await recordExecution(page, 1, 1, 100);
+    await recordExecution(page, 1, 2, 200);
+    await page.notebook.save();
+    await recordExecution(page, 1, 3, 300);
+
+    // Discard the changes on closing, without reverting the notebook first.
+    await page.activity
+      .getTabLocator('Simple_notebook.ipynb')
+      .locator('.lm-TabBar-tabCloseIcon')
+      .click();
+    await page
+      .locator('.jp-Dialog')
+      .locator('button.jp-mod-accept.jp-mod-warn')
+      .click();
+    await page.notebook.openByPath(`${tmpPath}/Simple_notebook.ipynb`);
+    await page.notebook.activate('Simple_notebook.ipynb');
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'data-prev-execution-time',
+      '200ms',
+    );
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n100ms',
     );
   });
 
@@ -151,15 +203,9 @@ test.describe('Execution history', () => {
     );
   });
 
-  test('Restoring an evicted run preserves the latest execution history', async ({
+  test('Unrelated metadata updates do not record a restored run again', async ({
     page,
   }) => {
-    await page.evaluate(async (pluginId) => {
-      const settings = await window.galata.getPlugin(
-        '@jupyterlab/apputils-extension:settings',
-      );
-      await settings.set(pluginId, 'historyCount', 1);
-    }, SETTINGS_ID);
     await recordExecution(page, 1, 1, 100);
     await page.notebook.save();
     await recordExecution(page, 1, 2, 200);
@@ -179,17 +225,14 @@ test.describe('Execution history', () => {
     }, NOTEBOOK_ID);
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'data-prev-execution-time',
-      '300ms',
+      '100ms',
     );
-    await expect(await timingWidget(page, 1)).toHaveAttribute(
-      'title',
-      'Previous Runs:\n300ms',
-    );
+    await expect(await timingWidget(page, 1)).not.toHaveAttribute('title');
 
     await recordExecution(page, 1, 4, 400);
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
-      'Previous Runs:\n300ms',
+      'Previous Runs:\n100ms',
     );
   });
 
@@ -350,6 +393,44 @@ test.describe('Execution history', () => {
     await expect(await timingWidget(page, 1)).toHaveAttribute(
       'title',
       previousRuns!,
+    );
+  });
+
+  test('Moved cells keep their history after many runs of other cells', async ({
+    page,
+  }) => {
+    await recordExecution(page, 1, 1, 100);
+    await recordExecution(page, 1, 2, 200);
+    await recordManyExecutions(page, 2);
+    await page.notebook.selectCells(1);
+    await page.evaluate(() =>
+      window.jupyterapp.commands.execute('notebook:move-cell-up'),
+    );
+    await expect(await timingWidget(page, 0)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n100ms',
+    );
+  });
+
+  test('Closed notebooks keep their history after many runs of other cells', async ({
+    page,
+    tmpPath,
+  }) => {
+    await recordExecution(page, 1, 1, 100);
+    await recordExecution(page, 1, 2, 200);
+    await page.notebook.save();
+    await page.notebook.close(false);
+    await page.notebook.createNew('Other.ipynb');
+    await recordManyExecutions(page, 0);
+    await page.notebook.openByPath(`${tmpPath}/Simple_notebook.ipynb`);
+    await page.notebook.activate('Simple_notebook.ipynb');
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'data-prev-execution-time',
+      '200ms',
+    );
+    await expect(await timingWidget(page, 1)).toHaveAttribute(
+      'title',
+      'Previous Runs:\n100ms',
     );
   });
 });
