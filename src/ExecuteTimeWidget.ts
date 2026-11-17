@@ -35,17 +35,6 @@ interface IRun {
   readonly previous: readonly string[];
 }
 
-// Runs by key, oldest first.
-const recentRuns = new Map<string, IRun>();
-
-// The last runs of moved cells and of cells in closed notebooks, by key and
-// oldest first. New runs do not push these out.
-const closedRuns = new Map<string, IRun>();
-
-// The last run of each cell model. JupyterLab deletes the `execution`
-// metadata when the next run starts, so the metadata cannot be used for this.
-const lastRuns = new WeakMap<ICellModel, IRun>();
-
 /**
  * Return the key of the completed run in `execution` metadata: the times at
  * which the run started and ended. Each run has its own times, and copies of
@@ -58,27 +47,82 @@ function runKey(execution: JSONObject): string | undefined {
 }
 
 /**
- * Add a run to `runs` as the newest entry, and drop the oldest entry when
- * there are more than `MAX_RECORDED_RUNS`.
+ * Stores the last run of each cell. Duplicated, moved and reopened cells find
+ * their run by its key.
  */
-function addNewest(runs: Map<string, IRun>, run: IRun) {
-  runs.delete(run.key);
-  runs.set(run.key, run);
-  if (runs.size > MAX_RECORDED_RUNS) {
-    runs.delete(runs.keys().next().value!);
-  }
+interface IRunStore {
+  /**
+   * Get the last run of a cell.
+   */
+  getLastRun(cellModel: ICellModel): IRun | undefined;
+
+  /**
+   * Get a run by its key.
+   */
+  getRunByKey(key: string): IRun | undefined;
+
+  /**
+   * Set the last run of a cell.
+   */
+  setLastRun(cellModel: ICellModel, run: IRun): void;
+
+  /**
+   * Keep the last run of a cell whose model is about to be disposed, so that
+   * the model that replaces it can find the run by its key.
+   */
+  keepLastRun(cellModel: ICellModel): void;
 }
 
 /**
- * Keep the last run of a cell whose model is about to be disposed, so that
- * the model that replaces it can find the run by its key.
+ * Keeps runs in memory until the page reloads.
  */
-function keepLastRun(cellModel: ICellModel) {
-  const last = lastRuns.get(cellModel);
-  if (last) {
-    addNewest(closedRuns, last);
+class MemoryRunStore implements IRunStore {
+  getLastRun(cellModel: ICellModel): IRun | undefined {
+    return this._lastRuns.get(cellModel);
   }
+
+  getRunByKey(key: string): IRun | undefined {
+    return this._recentRuns.get(key) ?? this._closedRuns.get(key);
+  }
+
+  setLastRun(cellModel: ICellModel, run: IRun): void {
+    this._addNewest(this._recentRuns, run);
+    this._lastRuns.set(cellModel, run);
+  }
+
+  keepLastRun(cellModel: ICellModel): void {
+    const last = this._lastRuns.get(cellModel);
+    if (last) {
+      this._addNewest(this._closedRuns, last);
+    }
+  }
+
+  /**
+   * Add a run to `runs` as the newest entry, and drop the oldest entry when
+   * there are more than `MAX_RECORDED_RUNS`.
+   */
+  private _addNewest(runs: Map<string, IRun>, run: IRun) {
+    runs.delete(run.key);
+    runs.set(run.key, run);
+    if (runs.size > MAX_RECORDED_RUNS) {
+      runs.delete(runs.keys().next().value!);
+    }
+  }
+
+  // Runs by key, oldest first.
+  private _recentRuns = new Map<string, IRun>();
+
+  // The last runs of moved cells and of cells in closed notebooks, by key and
+  // oldest first. New runs do not push these out.
+  private _closedRuns = new Map<string, IRun>();
+
+  // The last run of each cell model. JupyterLab deletes the `execution`
+  // metadata when the next run starts, so the metadata cannot be used for this.
+  private _lastRuns = new WeakMap<ICellModel, IRun>();
 }
+
+// Shared by all notebooks, because a cell can be copied to another notebook.
+const runStore: IRunStore = new MemoryRunStore();
 
 export interface IExecuteTimeSettings {
   enabled: boolean;
@@ -119,7 +163,7 @@ export default class ExecuteTimeWidget extends Widget {
     const model = this._panel.context.model;
     if (!model.isDisposed) {
       for (let i = 0; i < model.cells.length; ++i) {
-        keepLastRun(model.cells.get(i));
+        runStore.keepLastRun(model.cells.get(i));
       }
     }
     super.dispose();
@@ -174,7 +218,7 @@ export default class ExecuteTimeWidget extends Widget {
       // Register a model disposal handler on the underlying shared model,
       // see the explanation in `updateConnectedCell()` method.
       const deregisterOnDisposal = () => {
-        keepLastRun(cellModel);
+        runStore.keepLastRun(cellModel);
         this._deregisterMetadataChanges({ metadataChanged, id } as ICellModel);
         cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal, this);
       };
@@ -375,7 +419,7 @@ export default class ExecuteTimeWidget extends Widget {
         endTimeStr && !executionMetadata['iopub.execute_input'];
 
       this._renderExecutionTimeHistory(cell.model, executionTimeNode);
-      const lastRunTime = lastRuns.get(cell.model)?.duration;
+      const lastRunTime = runStore.getLastRun(cell.model)?.duration;
       let msg = '';
       if (isLikelyAborted) {
         msg = '';
@@ -490,13 +534,13 @@ export default class ExecuteTimeWidget extends Widget {
       return;
     }
     const key = runKey(execution);
-    const last = lastRuns.get(cellModel);
+    const last = runStore.getLastRun(cellModel);
     if (key === undefined || key === last?.key) {
       return;
     }
     // A known run comes from a copy or an earlier version of the cell, and
     // keeps the runs that were before it there.
-    let run = recentRuns.get(key) ?? closedRuns.get(key);
+    let run = runStore.getRunByKey(key);
     if (!run) {
       const startTime = new Date(
         (execution['shell.execute_reply.started'] ||
@@ -521,8 +565,7 @@ export default class ExecuteTimeWidget extends Widget {
           : [],
       };
     }
-    addNewest(recentRuns, run);
-    lastRuns.set(cellModel, run);
+    runStore.setLastRun(cellModel, run);
   }
 
   /**
@@ -533,7 +576,7 @@ export default class ExecuteTimeWidget extends Widget {
     cellModel: ICellModel,
     executionTimeNode: HTMLDivElement,
   ) {
-    const last = lastRuns.get(cellModel);
+    const last = runStore.getLastRun(cellModel);
     if (last) {
       executionTimeNode.setAttribute(
         PREV_DATA_EXECUTION_TIME_ATTR,
