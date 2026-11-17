@@ -17,7 +17,7 @@ const EXECUTE_TIME_CLASS = 'execute-time';
 
 const TOOLTIP_PREFIX = 'Previous Runs:';
 const PREV_DATA_EXECUTION_TIME_ATTR = 'data-prev-execution-time';
-// Open cells hold their runs, so this limits only lookups by `execution` metadata.
+// Cell models hold their own last run, so this limits only lookups by key.
 const MAX_RECORDED_RUNS = 2000;
 
 // How long do we animate the color for
@@ -47,8 +47,8 @@ function runKey(execution: JSONObject): string | undefined {
 }
 
 /**
- * Stores the last run of each cell. Duplicated, moved and reopened cells find
- * their run by its key.
+ * Stores the last run of each cell model. A new model with the same
+ * `execution` metadata finds the run by its key.
  */
 interface IRunStore {
   /**
@@ -112,8 +112,8 @@ class MemoryRunStore implements IRunStore {
   // Runs by key, oldest first.
   private _recentRuns = new Map<string, IRun>();
 
-  // The last runs of moved cells and of cells in closed notebooks, by key and
-  // oldest first. New runs do not push these out.
+  // The last runs of disposed cell models, by key and oldest first. New runs do
+  // not push these out.
   private _closedRuns = new Map<string, IRun>();
 
   // The last run of each cell model. JupyterLab deletes the `execution`
@@ -158,8 +158,8 @@ export default class ExecuteTimeWidget extends Widget {
     if (this.isDisposed) {
       return;
     }
-    // A closed notebook disposes its cell models after this widget, when their
-    // disposal handlers are disconnected.
+    // Closing a notebook disposes its cell models after this widget, so their
+    // disposal hooks do not run.
     const model = this._panel.context.model;
     if (!model.isDisposed) {
       for (let i = 0; i < model.cells.length; ++i) {
@@ -538,8 +538,8 @@ export default class ExecuteTimeWidget extends Widget {
     if (key === undefined || key === last?.key) {
       return;
     }
-    // A known run comes from a copy or an earlier version of the cell, and
-    // keeps the runs that were before it there.
+    // A known key means a copy or an earlier version of this cell, so reuse
+    // that run.
     let run = runStore.getRunByKey(key);
     if (!run) {
       const startTime = new Date(
