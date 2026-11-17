@@ -17,7 +17,7 @@ const EXECUTE_TIME_CLASS = 'execute-time';
 
 const TOOLTIP_PREFIX = 'Previous Runs:';
 const PREV_DATA_EXECUTION_TIME_ATTR = 'data-prev-execution-time';
-// Cell models hold their own last run, so this limits only lookups by key.
+// Cell models hold their own last run, so this limit applies only to lookups by key.
 const MAX_RECORDED_RUNS = 2000;
 
 // How long do we animate the color for
