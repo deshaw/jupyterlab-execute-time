@@ -10,13 +10,16 @@ const NOTEBOOK_ID = '@jupyterlab/notebook-extension:tracker';
 const START = '2026-09-29T12:00:00.000Z';
 const END = '2026-09-29T12:00:01.000Z';
 
-async function openNotebook(page: IJupyterLabPageFixture, path: string) {
-  await page.evaluate(async (path) => {
+async function openNotebook(
+  page: IJupyterLabPageFixture,
+  notebookPath: string,
+) {
+  await page.evaluate(async (notebookPath) => {
     const panel = (await window.jupyterapp.commands.execute('docmanager:open', {
-      path,
+      path: notebookPath,
     })) as NotebookPanel;
     await panel.context.ready;
-  }, path);
+  }, notebookPath);
 }
 
 async function openSimpleNotebook(
@@ -31,15 +34,15 @@ async function openSimpleNotebook(
 }
 
 async function saveAndReopen(page: IJupyterLabPageFixture) {
-  const path = await page.evaluate(async () => {
+  const notebookPath = await page.evaluate(async () => {
     const panel = window.jupyterapp.shell.currentWidget as NotebookPanel;
-    const path = panel.context.path;
+    const savedPath = panel.context.path;
     await panel.context.save();
     await window.jupyterapp.commands.execute('application:close');
-    return path;
+    return savedPath;
   });
   await expect(page.locator('.jp-NotebookPanel')).toHaveCount(0);
-  await openNotebook(page, path);
+  await openNotebook(page, notebookPath);
 }
 
 for (const showLiveExecutionTime of [true, false]) {

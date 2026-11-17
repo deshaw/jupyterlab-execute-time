@@ -273,12 +273,12 @@ export default class ExecuteTimeWidget extends Widget {
     }
   }
 
-  _cellStateChanged(cellModel: ICellModel, args: { name: string }) {
+  private _cellStateChanged(cellModel: ICellModel, args: { name: string }) {
     if (args.name !== 'executionState') {
       return;
     }
-    // Successful execution sets the cell idle before recording its reply.
-    // Wait for that metadata so we do not remove completed timing or history.
+    // The running client records the reply in the same task as the idle state;
+    // collaborators get it in a later message and render the node again.
     void Promise.resolve().then(() => {
       if (this.isDisposed || this._panel.isDisposed) {
         return;
