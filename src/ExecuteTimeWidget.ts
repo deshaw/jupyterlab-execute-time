@@ -238,7 +238,7 @@ export default class ExecuteTimeWidget extends Widget {
         cellModel.metadataChanged.disconnect(fn, this);
         const disposedFn = this._cellDisposedSlotMap[cellModel.id];
         if (disposedFn) {
-          // The shared model can outlive this widget, so remove its cleanup hook too.
+          // Re-enabling the extension connects a new disposal hook, so remove this one.
           if (cellModel.sharedModel) {
             cellModel.sharedModel.disposed.disconnect(disposedFn, this);
           }
