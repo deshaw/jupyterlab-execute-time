@@ -17,10 +17,112 @@ const EXECUTE_TIME_CLASS = 'execute-time';
 
 const TOOLTIP_PREFIX = 'Previous Runs:';
 const PREV_DATA_EXECUTION_TIME_ATTR = 'data-prev-execution-time';
+// Cell models hold their own last run, so this limit applies only to lookups by key.
+const MAX_RECORDED_RUNS = 2000;
 
 // How long do we animate the color for
 const ANIMATE_TIME_MS = 1000;
 const ANIMATE_CSS = `executeHighlight ${ANIMATE_TIME_MS}ms`;
+
+/**
+ * A completed run of a cell, with the durations of the runs of the same cell
+ * before it, newest first.
+ */
+interface IRun {
+  // The start and end times of the run, from `runKey`.
+  readonly key: string;
+  readonly duration: string;
+  readonly previous: readonly string[];
+}
+
+/**
+ * Return the key of the completed run in `execution` metadata: the times at
+ * which the run started and ended. Each run has its own times, and copies of
+ * a cell keep them.
+ */
+function runKey(execution: JSONObject): string | undefined {
+  const start = execution['iopub.execute_input'];
+  const end = execution['shell.execute_reply'] ?? execution['execution_failed'];
+  return start && end ? `${start} ${end}` : undefined;
+}
+
+/**
+ * Stores the last run of each cell model. A new model with the same
+ * `execution` metadata finds the run by its key.
+ */
+interface IRunStore {
+  /**
+   * Get the last run of a cell.
+   */
+  getLastRun(cellModel: ICellModel): IRun | undefined;
+
+  /**
+   * Get a run by its key.
+   */
+  getRunByKey(key: string): IRun | undefined;
+
+  /**
+   * Set the last run of a cell.
+   */
+  setLastRun(cellModel: ICellModel, run: IRun): void;
+
+  /**
+   * Keep the last run of a cell whose model is about to be disposed, so that
+   * the model that replaces it can find the run by its key.
+   */
+  keepLastRun(cellModel: ICellModel): void;
+}
+
+/**
+ * Keeps runs in memory until the page reloads.
+ */
+class MemoryRunStore implements IRunStore {
+  getLastRun(cellModel: ICellModel): IRun | undefined {
+    return this._lastRuns.get(cellModel);
+  }
+
+  getRunByKey(key: string): IRun | undefined {
+    return this._recentRuns.get(key) ?? this._closedRuns.get(key);
+  }
+
+  setLastRun(cellModel: ICellModel, run: IRun): void {
+    this._addNewest(this._recentRuns, run);
+    this._lastRuns.set(cellModel, run);
+  }
+
+  keepLastRun(cellModel: ICellModel): void {
+    const last = this._lastRuns.get(cellModel);
+    if (last) {
+      this._addNewest(this._closedRuns, last);
+    }
+  }
+
+  /**
+   * Add a run to `runs` as the newest entry, and drop the oldest entry when
+   * there are more than `MAX_RECORDED_RUNS`.
+   */
+  private _addNewest(runs: Map<string, IRun>, run: IRun) {
+    runs.delete(run.key);
+    runs.set(run.key, run);
+    if (runs.size > MAX_RECORDED_RUNS) {
+      runs.delete(runs.keys().next().value!);
+    }
+  }
+
+  // Runs by key, oldest first.
+  private _recentRuns = new Map<string, IRun>();
+
+  // The last runs of disposed cell models, by key and oldest first. New runs do
+  // not push these out.
+  private _closedRuns = new Map<string, IRun>();
+
+  // The last run of each cell model. JupyterLab deletes the `execution`
+  // metadata when the next run starts, so the metadata cannot be used for this.
+  private _lastRuns = new WeakMap<ICellModel, IRun>();
+}
+
+// Shared by all notebooks, because a cell can be copied to another notebook.
+const runStore: IRunStore = new MemoryRunStore();
 
 export interface IExecuteTimeSettings {
   enabled: boolean;
@@ -53,8 +155,19 @@ export default class ExecuteTimeWidget extends Widget {
   }
 
   dispose(): void {
+    if (this.isDisposed) {
+      return;
+    }
     for (const cell of this._executionTimers.keys()) {
       this._clearExecutionTimer(cell);
+    }
+    // Closing a notebook disposes its cell models after this widget, so their
+    // disposal hooks do not run.
+    const model = this._panel.context.model;
+    if (!model.isDisposed) {
+      for (let i = 0; i < model.cells.length; ++i) {
+        runStore.keepLastRun(model.cells.get(i));
+      }
     }
     super.dispose();
   }
@@ -93,7 +206,10 @@ export default class ExecuteTimeWidget extends Widget {
   _registerMetadataChanges(cellModel: ICellModel) {
     if (!(cellModel.id in this._cellSlotMap)) {
       // Register signal handler with `cellModel` stored in closure.
-      const fn = () => this._cellMetadataChanged(cellModel);
+      const fn = () => {
+        this._recordRun(cellModel);
+        this._cellMetadataChanged(cellModel);
+      };
       this._cellSlotMap[cellModel.id] = fn;
       cellModel.metadataChanged.connect(fn, this);
       cellModel.stateChanged.connect(this._cellStateChanged, this);
@@ -106,6 +222,7 @@ export default class ExecuteTimeWidget extends Widget {
       // Register a model disposal handler on the underlying shared model,
       // see the explanation in `updateConnectedCell()` method.
       const deregisterOnDisposal = () => {
+        runStore.keepLastRun(cellModel);
         this._deregisterMetadataChanges({
           metadataChanged,
           stateChanged,
@@ -113,8 +230,10 @@ export default class ExecuteTimeWidget extends Widget {
         } as ICellModel);
         cellModel.sharedModel.disposed.disconnect(deregisterOnDisposal, this);
       };
+      this._cellDisposedSlotMap[cellModel.id] = deregisterOnDisposal;
       cellModel.sharedModel.disposed.connect(deregisterOnDisposal, this);
     }
+    this._recordRun(cellModel);
     // Always re-render cells.
     // In case there was already metadata: do not highlight on first load.
     this._cellMetadataChanged(cellModel, true);
@@ -126,6 +245,14 @@ export default class ExecuteTimeWidget extends Widget {
       if (fn) {
         cellModel.metadataChanged.disconnect(fn, this);
         cellModel.stateChanged.disconnect(this._cellStateChanged, this);
+        const disposedFn = this._cellDisposedSlotMap[cellModel.id];
+        if (disposedFn) {
+          // Re-enabling the extension connects a new disposal hook, so remove this one.
+          if (cellModel.sharedModel) {
+            cellModel.sharedModel.disposed.disconnect(disposedFn, this);
+          }
+          delete this._cellDisposedSlotMap[cellModel.id];
+        }
         const codeCell = this._getCodeCell(cellModel);
         if (codeCell) {
           this._removeExecuteNode(codeCell);
@@ -345,6 +472,8 @@ export default class ExecuteTimeWidget extends Widget {
       const isLikelyAborted =
         endTimeStr && !executionMetadata['iopub.execute_input'];
 
+      this._renderExecutionTimeHistory(cell.model, executionTimeNode);
+      const lastRunTime = runStore.getLastRun(cell.model)?.duration;
       let msg = '';
       if (isLikelyAborted) {
         msg = '';
@@ -356,28 +485,6 @@ export default class ExecuteTimeWidget extends Widget {
         if (this._settings.minTime <= executionTimeMillis / 1000.0) {
           const executionTime = getTimeDiff(endTime, startTime);
           const executionsPerSecond = 1000.0 / executionTimeMillis;
-          const lastExecutionTime = executionTimeNode.getAttribute(
-            PREV_DATA_EXECUTION_TIME_ATTR,
-          );
-          // Store the last execution time in the node to be used for various options
-          executionTimeNode.setAttribute(
-            PREV_DATA_EXECUTION_TIME_ATTR,
-            executionTime,
-          );
-          // Only add a tooltip for all non-displayed execution times.
-          if (this._settings.historyCount > 0 && lastExecutionTime) {
-            let tooltip = executionTimeNode.getAttribute('title');
-            const executionTimes = [lastExecutionTime];
-            if (tooltip) {
-              executionTimes.push(
-                ...tooltip.substring(TOOLTIP_PREFIX.length + 1).split('\n'),
-              );
-              // JS does the right thing of having empty items if extended
-              executionTimes.length = this._settings.historyCount;
-            }
-            tooltip = `${TOOLTIP_PREFIX}\n${executionTimes.join('\n')}`;
-            executionTimeNode.setAttribute('title', tooltip);
-          }
           executionTimeNode.children[2].textContent = '';
 
           msg = failed ? 'Failed' : 'Last executed';
@@ -401,9 +508,6 @@ export default class ExecuteTimeWidget extends Widget {
         }
       } else if (startTime) {
         if (this._settings.showLiveExecutionTime) {
-          const lastRunTime = executionTimeNode.getAttribute(
-            'data-prev-execution-time',
-          );
           const workingTimer = window.setInterval(() => {
             if (
               cell.isDisposed ||
@@ -448,9 +552,6 @@ export default class ExecuteTimeWidget extends Widget {
           this._settings.timezone,
         )}`;
       } else if (queuedTime) {
-        const lastRunTime = executionTimeNode.getAttribute(
-          'data-prev-execution-time',
-        );
         if (this._settings.showLiveExecutionTime && lastRunTime) {
           executionTimeNode.children[2].textContent = `N/A (${lastRunTime})`;
         }
@@ -474,13 +575,84 @@ export default class ExecuteTimeWidget extends Widget {
       }
     } else {
       // Hide it if data was removed (e.g. clear output).
-      // Don't remove as element store history, which are useful for later showing past runtime.
       const executionTimeNode = cell.node.querySelector(
         `.${EXECUTE_TIME_CLASS}`,
       );
       if (executionTimeNode) {
         executionTimeNode.classList.add('execute-time-hidden');
       }
+    }
+  }
+
+  /**
+   * Record the completed run in the `execution` metadata of a cell, after the
+   * last run of the same cell model.
+   */
+  private _recordRun(cellModel: ICellModel) {
+    const execution = cellModel.getMetadata('execution');
+    if (!execution || !JSONExt.isObject(execution)) {
+      return;
+    }
+    const key = runKey(execution);
+    const last = runStore.getLastRun(cellModel);
+    if (key === undefined || key === last?.key) {
+      return;
+    }
+    // A known key means a copy or an earlier version of this cell, so reuse
+    // that run.
+    let run = runStore.getRunByKey(key);
+    if (!run) {
+      const startTime = new Date(
+        (execution['shell.execute_reply.started'] ||
+          execution['iopub.execute_input']) as string,
+      );
+      const endTime = new Date(
+        (execution['shell.execute_reply'] ??
+          execution['execution_failed']) as string,
+      );
+      const millis = differenceInMilliseconds(endTime, startTime);
+      if (this._settings.minTime > millis / 1000.0) {
+        return;
+      }
+      run = {
+        key,
+        duration: getTimeDiff(endTime, startTime),
+        previous: last
+          ? [last.duration, ...last.previous].slice(
+              0,
+              this._settings.historyCount,
+            )
+          : [],
+      };
+    }
+    runStore.setLastRun(cellModel, run);
+  }
+
+  /**
+   * Show the runs before the last run of a cell in the tooltip. The last run
+   * is on display, or beside the timer while the next run is in progress.
+   */
+  private _renderExecutionTimeHistory(
+    cellModel: ICellModel,
+    executionTimeNode: HTMLDivElement,
+  ) {
+    const last = runStore.getLastRun(cellModel);
+    if (last) {
+      executionTimeNode.setAttribute(
+        PREV_DATA_EXECUTION_TIME_ATTR,
+        last.duration,
+      );
+    } else {
+      executionTimeNode.removeAttribute(PREV_DATA_EXECUTION_TIME_ATTR);
+    }
+
+    const previousExecutionTimes =
+      last?.previous.slice(0, this._settings.historyCount) ?? [];
+    if (previousExecutionTimes.length > 0) {
+      const tooltip = `${TOOLTIP_PREFIX}\n${previousExecutionTimes.join('\n')}`;
+      executionTimeNode.setAttribute('title', tooltip);
+    } else {
+      executionTimeNode.removeAttribute('title');
     }
   }
 
@@ -587,6 +759,9 @@ export default class ExecuteTimeWidget extends Widget {
   private _updateCounter: WeakMap<CodeCell, number> = new WeakMap();
   private _executionTimers: Map<CodeCell, number> = new Map();
   private _cellSlotMap: {
+    [id: string]: () => void;
+  } = {};
+  private _cellDisposedSlotMap: {
     [id: string]: () => void;
   } = {};
   private _tracker: INotebookTracker;
