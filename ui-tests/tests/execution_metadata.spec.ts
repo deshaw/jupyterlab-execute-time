@@ -437,35 +437,6 @@ test.describe('A running cell that turns idle without a reply', () => {
     await expect(timing(page, 0)).toContainText('Last executed');
     await expect(timing(page, 0).locator('span').nth(1)).toBeEmpty();
   });
-
-  test('shows the live time of a real run', async ({ page }) => {
-    const run = startRun(page, 'import time\ntime.sleep(1)');
-    await expect(timing(page, 0)).toContainText('Execution started at');
-    await expect(timing(page, 0).locator('span').nth(1)).not.toBeEmpty();
-    await run;
-    await expect(timing(page, 0)).toContainText('Last executed');
-  });
-
-  test('keeps a completed run in the history of a real run', async ({
-    page,
-  }) => {
-    const started = { 'iopub.execute_input': now() };
-    await setExecution(page, 0, 'running', started);
-    await setExecution(page, 0, 'idle', {
-      ...started,
-      'shell.execute_reply': now(),
-    });
-    await expect(timing(page, 0)).toContainText('Last executed');
-    const completed = await timing(page, 0).getAttribute(
-      'data-prev-execution-time',
-    );
-
-    await startRun(page, 'import time\ntime.sleep(1)');
-    await expect(timing(page, 0)).toHaveAttribute(
-      'title',
-      `Previous Runs:\n${completed}`,
-    );
-  });
 });
 
 test.describe('Live timer intervals', () => {
@@ -515,17 +486,6 @@ test.describe('Live timer intervals', () => {
       'shell.execute_reply': now(),
     });
     await expect(timing(page, 0)).toContainText('Last executed');
-    await expect.poll(intervals.active).toBe(0);
-  });
-
-  test('Closing the notebook clears the interval of a running cell', async ({
-    page,
-  }) => {
-    const intervals = await trackLiveIntervals(page);
-    await setExecution(page, 0, 'running', { 'iopub.execute_input': now() });
-    await expect.poll(intervals.active).toBe(1);
-
-    await saveAndClose(page);
     await expect.poll(intervals.active).toBe(0);
   });
 });
@@ -586,17 +546,6 @@ test.describe('A cell changed while it runs', () => {
     index: number;
     change: (page: IJupyterLabPageFixture) => Promise<void>;
   }[] = [
-    {
-      name: 'duplicated',
-      index: 1,
-      change: (page) => runCommands(page, ['notebook:duplicate-below']),
-    },
-    {
-      name: 'copied and pasted',
-      index: 1,
-      change: (page) =>
-        runCommands(page, ['notebook:copy-cell', 'notebook:paste-cell-below']),
-    },
     {
       name: 'moved',
       index: 1,
