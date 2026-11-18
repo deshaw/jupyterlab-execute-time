@@ -231,6 +231,7 @@ async function getCell(page: IJupyterLabPageFixture, index: number) {
 async function trackLiveIntervals(page: IJupyterLabPageFixture) {
   const intervals = await page.evaluateHandle(() => {
     const browserWindow: Window = window;
+    const started: number[] = [];
     const active = new Set<number>();
     const { setInterval, clearInterval } = browserWindow;
     browserWindow.setInterval = (
@@ -241,6 +242,7 @@ async function trackLiveIntervals(page: IJupyterLabPageFixture) {
       const id = setInterval(handler, delay, ...args);
       // The live timer ticks every 100 ms.
       if (delay === 100) {
+        started.push(id);
         active.add(id);
       }
       return id;
@@ -249,9 +251,10 @@ async function trackLiveIntervals(page: IJupyterLabPageFixture) {
       active.delete(id!);
       clearInterval(id);
     };
-    return { active };
+    return { started, active };
   });
   return {
+    started: () => intervals.evaluate(({ started }) => started.length),
     active: () => intervals.evaluate(({ active }) => active.size),
   };
 }
@@ -482,6 +485,23 @@ test.describe('Live timer intervals', () => {
     await setExecution(page, 0, 'running', { 'iopub.execute_input': now() });
     await expect(timing(page, 0)).toContainText('Execution started at');
     await expect.poll(intervals.active).toBe(1);
+  });
+
+  test('A running cell keeps one interval when its metadata changes', async ({
+    page,
+  }) => {
+    const intervals = await trackLiveIntervals(page);
+    const started = { 'iopub.execute_input': now() };
+    await setExecution(page, 0, 'running', started);
+    await expect.poll(intervals.active).toBe(1);
+
+    // The kernel reports idle shortly before it replies.
+    await setExecution(page, 0, 'running', {
+      ...started,
+      'iopub.status.idle': now(),
+    });
+    await expect.poll(intervals.started).toBe(2);
+    expect(await intervals.active()).toBe(1);
   });
 
   test('A completed run has no interval', async ({ page }) => {
